@@ -1,0 +1,21 @@
+{
+  "name": "mermaid-to-png-app",
+  "version": "1.0.0",
+  "description": "A desktop app to render Mermaid diagrams and export as PNG.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Mermaid",
+    "Electron",
+    "PNG"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^31.0.2",
+    "mermaid": "^10.9.1"
+  }
+}
