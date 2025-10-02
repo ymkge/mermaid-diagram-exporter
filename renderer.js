@@ -87,34 +87,9 @@ async function saveAsPng() {
     // 2. 解像度スケールを取得
     const scale = parseFloat(scaleSelector.value) || 1;
 
-    // 3. プレビューのSVG要素から元の幅と高さを取得
-    const svgElement = previewEl.querySelector('svg');
-    let originalWidth = 800; // デフォルト値
-    let originalHeight = 600; // デフォルト値
-
-    if (svgElement) {
-      // SVGのviewBoxから幅と高さを取得
-      const viewBox = svgElement.getAttribute('viewBox');
-      if (viewBox) {
-        const parts = viewBox.split(' ');
-        if (parts.length === 4) {
-          originalWidth = parseFloat(parts[2]);
-          originalHeight = parseFloat(parts[3]);
-        }
-      } else {
-        // viewBoxがない場合はwidth/height属性から取得
-        originalWidth = parseFloat(svgElement.getAttribute('width')) || originalWidth;
-        originalHeight = parseFloat(svgElement.getAttribute('height')) || originalHeight;
-      }
-    }
-
-    // mmdcに渡す幅と高さを計算
-    const outputWidth = originalWidth * scale;
-    const outputHeight = originalHeight * scale;
-
     // 4. メインプロセスにmermaid-cliでのPNG生成を依頼
     const selectedTheme = themeSelector.value; // 現在選択されているテーマを取得
-    const result = await window.api.savePngCli(mermaidCode, filePath, outputWidth, outputHeight, 1, selectedTheme); // テーマ情報を追加
+    const result = await window.api.savePngCli(mermaidCode, filePath, scale, selectedTheme); // テーマ情報を追加
 
     if (result.success) {
       alert('PNGファイルが正常に保存されました。');

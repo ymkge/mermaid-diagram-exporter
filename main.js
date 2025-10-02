@@ -70,7 +70,7 @@ ipcMain.handle('save-png', async (event, filePath, data) => {
 });
 
 // mermaid-cliを使ってPNGを生成するハンドラ
-ipcMain.handle('save-png-cli', async (event, mermaidCode, outputPath, width, height, scale, theme) => {
+ipcMain.handle('save-png-cli', async (event, mermaidCode, outputPath, scale, theme) => {
   const tempInputPath = path.join(app.getPath('temp'), `mermaid-input-${Date.now()}.mmd`);
 
   try {
@@ -78,8 +78,8 @@ ipcMain.handle('save-png-cli', async (event, mermaidCode, outputPath, width, hei
     fs.writeFileSync(tempInputPath, mermaidCode);
 
     // mmdcコマンドを構築
-    // -i: 入力ファイル, -o: 出力ファイル, -w: 幅, -H: 高さ, -s: スケール, -t: テーマ
-    const mmdcCommand = `npx mmdc -i "${tempInputPath}" -o "${outputPath}" -w ${width} -H ${height} -s ${scale} -t ${theme}`;
+    // -i: 入力ファイル, -o: 出力ファイル, -s: スケール, -t: テーマ
+    const mmdcCommand = `npx mmdc -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme}`;
 
     console.log(`Executing: ${mmdcCommand}`);
 
