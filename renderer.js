@@ -79,25 +79,44 @@ async function saveAsPng() {
     // 1. SVGをCanvasに描画
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const svgXml = new XMLSerializer().serializeToString(svgElement);
+    let svgXml = new XMLSerializer().serializeToString(svgElement);
+
+    // SVG内のフォントサイズを強制的に大きくする (DOM操作)
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgXml, 'image/svg+xml');
+    const textElements = svgDoc.querySelectorAll('text, tspan');
+    textElements.forEach(el => {
+      // 既存のfont-sizeを上書き、または追加
+      el.style.setProperty('font-size', '32px', 'important'); // 例: 32pxに強制
+      // もしstyle属性がない場合は追加
+      if (!el.hasAttribute('style')) {
+        el.setAttribute('style', 'font-size: 32px !important;');
+      }
+    });
+    svgXml = new XMLSerializer().serializeToString(svgDoc);
+
+
     const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
     const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
 
     const img = new Image();
     img.onload = async () => {
-      // 解像度スケールを取得
       const scale = parseFloat(scaleSelector.value) || 1;
+      const devicePixelRatio = window.devicePixelRatio || 1; // デバイスのピクセル比を取得
 
-      // CanvasのサイズをSVGのサイズ x スケールに設定
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+      // Canvasの物理ピクセルサイズを設定
+      canvas.width = img.width * scale * devicePixelRatio;
+      canvas.height = img.height * scale * devicePixelRatio;
+
+      // Canvasの描画コンテキストをスケーリング
+      ctx.scale(devicePixelRatio, devicePixelRatio);
 
       // 背景を白で塗りつぶす（透過SVGの場合に備える）
       ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio); // スケール前の論理サイズで塗りつぶし
 
       // スケールを適用して画像を描画
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale); // 論理サイズで描画
 
       // 2. CanvasからPNGのバイナリデータを取得 (Bufferの代わりにUint8Arrayを使用)
       const pngDataUrl = canvas.toDataURL('image/png');
@@ -112,7 +131,6 @@ async function saveAsPng() {
       // 3. メインプロセスに保存ダイアログの表示を依頼
       const filePath = await window.api.saveDialog();
       if (!filePath) {
-        // ユーザーがダイアログをキャンセルした場合
         console.log('Save cancelled.');
         return;
       }
