@@ -77,10 +77,15 @@ async function saveAsPng() {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
 
-      // 2. CanvasからPNGのBufferを取得
+      // 2. CanvasからPNGのバイナリデータを取得 (Bufferの代わりにUint8Arrayを使用)
       const pngDataUrl = canvas.toDataURL('image/png');
       const base64Data = pngDataUrl.replace(/^data:image\/png;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
 
       // 3. メインプロセスに保存ダイアログの表示を依頼
       const filePath = await window.api.saveDialog();
@@ -91,7 +96,7 @@ async function saveAsPng() {
       }
 
       // 4. メインプロセスにPNGデータの保存を依頼
-      const result = await window.api.savePng(filePath, buffer);
+      const result = await window.api.savePng(filePath, byteArray);
       if (result.success) {
         alert('PNGファイルが正常に保存されました。');
       } else {
