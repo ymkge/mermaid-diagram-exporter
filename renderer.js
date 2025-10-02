@@ -9,7 +9,7 @@ const previewEl = document.getElementById('preview');
 const renderBtn = document.getElementById('render-btn');
 const saveBtn = document.getElementById('save-btn');
 const themeSelector = document.getElementById('theme-selector');
-const scaleSelector = document.getElementById('scale-selector'); // 追加
+const scaleSelector = document.getElementById('scale-selector');
 
 // 初期Mermaidテーマ設定
 mermaid.initialize({
@@ -66,84 +66,61 @@ async function renderMermaid() {
 }
 
 /**
- * レンダリングされたSVGをPNGとして保存する
+ * レンダリングされたSVGをPNGとして保存する (mermaid-cliを使用)
  */
 async function saveAsPng() {
-  const svgElement = previewEl.querySelector('svg');
-  if (!svgElement) {
-    alert('PNGとして保存する前に、まずMermaidコードをレンダリングしてください。');
+  const mermaidCode = mermaidCodeEl.value;
+  if (!mermaidCode) {
+    alert('PNGとして保存する前に、まずMermaidコードを入力してください。');
     return;
   }
 
   try {
-    // 1. SVGをCanvasに描画
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    let svgXml = new XMLSerializer().serializeToString(svgElement);
+    // 1. 保存ダイアログを表示し、保存パスを取得
+    const filePath = await window.api.saveDialog();
+    if (!filePath) {
+      // ユーザーがダイアログをキャンセルした場合
+      console.log('Save cancelled.');
+      return;
+    }
 
-    // SVG内のフォントサイズを強制的に大きくする (DOM操作)
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svgXml, 'image/svg+xml');
-    const textElements = svgDoc.querySelectorAll('text, tspan');
-    textElements.forEach(el => {
-      // 既存のfont-sizeを上書き、または追加
-      el.style.setProperty('font-size', '32px', 'important'); // 例: 32pxに強制
-      // もしstyle属性がない場合は追加
-      if (!el.hasAttribute('style')) {
-        el.setAttribute('style', 'font-size: 32px !important;');
-      }
-    });
-    svgXml = new XMLSerializer().serializeToString(svgDoc);
+    // 2. 解像度スケールを取得
+    const scale = parseFloat(scaleSelector.value) || 1;
 
+    // 3. プレビューのSVG要素から元の幅と高さを取得
+    const svgElement = previewEl.querySelector('svg');
+    let originalWidth = 800; // デフォルト値
+    let originalHeight = 600; // デフォルト値
 
-    const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
-    const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
-
-    const img = new Image();
-    img.onload = async () => {
-      const scale = parseFloat(scaleSelector.value) || 1;
-      const devicePixelRatio = window.devicePixelRatio || 1; // デバイスのピクセル比を取得
-
-      // Canvasの物理ピクセルサイズを設定
-      canvas.width = img.width * scale * devicePixelRatio;
-      canvas.height = img.height * scale * devicePixelRatio;
-
-      // Canvasの描画コンテキストをスケーリング
-      ctx.scale(devicePixelRatio, devicePixelRatio);
-
-      // 背景を白で塗りつぶす（透過SVGの場合に備える）
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio); // スケール前の論理サイズで塗りつぶし
-
-      // スケールを適用して画像を描画
-      ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale); // 論理サイズで描画
-
-      // 2. CanvasからPNGのバイナリデータを取得 (Bufferの代わりにUint8Arrayを使用)
-      const pngDataUrl = canvas.toDataURL('image/png');
-      const base64Data = pngDataUrl.replace(/^data:image\/png;base64,/, '');
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-
-      // 3. メインプロセスに保存ダイアログの表示を依頼
-      const filePath = await window.api.saveDialog();
-      if (!filePath) {
-        console.log('Save cancelled.');
-        return;
-      }
-
-      // 4. メインプロセスにPNGデータの保存を依頼
-      const result = await window.api.savePng(filePath, byteArray);
-      if (result.success) {
-        alert('PNGファイルが正常に保存されました。');
+    if (svgElement) {
+      // SVGのviewBoxから幅と高さを取得
+      const viewBox = svgElement.getAttribute('viewBox');
+      if (viewBox) {
+        const parts = viewBox.split(' ');
+        if (parts.length === 4) {
+          originalWidth = parseFloat(parts[2]);
+          originalHeight = parseFloat(parts[3]);
+        }
       } else {
-        alert(`保存に失敗しました: ${result.error}`);
+        // viewBoxがない場合はwidth/height属性から取得
+        originalWidth = parseFloat(svgElement.getAttribute('width')) || originalWidth;
+        originalHeight = parseFloat(svgElement.getAttribute('height')) || originalHeight;
       }
-    };
-    img.src = dataUrl;
+    }
+
+    // mmdcに渡す幅と高さを計算
+    const outputWidth = originalWidth * scale;
+    const outputHeight = originalHeight * scale;
+
+    // 4. メインプロセスにmermaid-cliでのPNG生成を依頼
+    const selectedTheme = themeSelector.value; // 現在選択されているテーマを取得
+    const result = await window.api.savePngCli(mermaidCode, filePath, outputWidth, outputHeight, 1, selectedTheme); // テーマ情報を追加
+
+    if (result.success) {
+      alert('PNGファイルが正常に保存されました。');
+    } else {
+      alert(`保存に失敗しました: ${result.error}\n${result.stderr || ''}`);
+    }
 
   } catch (error) {
     console.error('Failed to save PNG:', error);

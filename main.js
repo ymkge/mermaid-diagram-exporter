@@ -3,6 +3,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process'); // child_processモジュールを追加
 
 // ウィンドウを作成する関数
 const createWindow = () => {
@@ -57,14 +58,53 @@ ipcMain.handle('save-dialog', async () => {
   return filePath;
 });
 
-// PNGデータをファイルに保存するハンドラ
+// PNGデータをファイルに保存するハンドラ (Canvasベースの旧方式、今回は使用しないが残しておく)
 ipcMain.handle('save-png', async (event, filePath, data) => {
   try {
-    // レンダラーから受け取ったバッファデータをファイルに書き込む
     fs.writeFileSync(filePath, data);
     return { success: true };
   } catch (error) {
     console.error('Failed to save PNG:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// mermaid-cliを使ってPNGを生成するハンドラ
+ipcMain.handle('save-png-cli', async (event, mermaidCode, outputPath, width, height, scale) => {
+  const tempInputPath = path.join(app.getPath('temp'), `mermaid-input-${Date.now()}.mmd`);
+
+  try {
+    // Mermaidコードを一時ファイルに書き込む
+    fs.writeFileSync(tempInputPath, mermaidCode);
+
+    // mmdcコマンドを構築
+    // -i: 入力ファイル, -o: 出力ファイル, -w: 幅, -H: 高さ, -s: スケール
+    // Puppeteerのパスはnode_modules/.bin/mmdcが自動で解決してくれるはず
+    const mmdcCommand = `npx mmdc -i "${tempInputPath}" -o "${outputPath}" -w ${width} -H ${height} -s ${scale}`;
+
+    console.log(`Executing: ${mmdcCommand}`);
+
+    return new Promise((resolve, reject) => {
+      exec(mmdcCommand, (error, stdout, stderr) => {
+        // 一時ファイルを削除
+        fs.unlinkSync(tempInputPath);
+
+        if (error) {
+          console.error(`mmdc exec error: ${error}`);
+          console.error(`mmdc stderr: ${stderr}`);
+          reject({ success: false, error: error.message, stderr: stderr });
+          return;
+        }
+        console.log(`mmdc stdout: ${stdout}`);
+        resolve({ success: true });
+      });
+    });
+  } catch (error) {
+    console.error('Failed to save PNG via mmdc:', error);
+    // 一時ファイルが存在すれば削除を試みる
+    if (fs.existsSync(tempInputPath)) {
+      fs.unlinkSync(tempInputPath);
+    }
     return { success: false, error: error.message };
   }
 });
