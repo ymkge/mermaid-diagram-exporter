@@ -9,9 +9,16 @@ const previewEl = document.getElementById('preview');
 const renderBtn = document.getElementById('render-btn');
 const saveBtn = document.getElementById('save-btn');
 const themeSelector = document.getElementById('theme-selector');
+const scaleSelector = document.getElementById('scale-selector'); // 追加
 
 // 初期Mermaidテーマ設定
-mermaid.initialize({ startOnLoad: false, theme: 'default' });
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  themeVariables: {
+    fontSize: '20px', // デフォルトのフォントサイズを大きくする
+  },
+});
 
 // --- イベントリスナー --- //
 
@@ -25,7 +32,13 @@ saveBtn.addEventListener('click', saveAsPng);
 themeSelector.addEventListener('change', (event) => {
     // Mermaidのテーマを更新し、再レンダリング
     const selectedTheme = event.target.value;
-    mermaid.initialize({ startOnLoad: false, theme: selectedTheme });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: selectedTheme,
+      themeVariables: {
+        fontSize: '20px', // デフォルトのフォントサイズを大きくする
+      },
+    });
     renderMermaid();
 });
 
@@ -72,10 +85,19 @@ async function saveAsPng() {
 
     const img = new Image();
     img.onload = async () => {
-      // CanvasのサイズをSVGに合わせる
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
+      // 解像度スケールを取得
+      const scale = parseFloat(scaleSelector.value) || 1;
+
+      // CanvasのサイズをSVGのサイズ x スケールに設定
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      // 背景を白で塗りつぶす（透過SVGの場合に備える）
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // スケールを適用して画像を描画
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       // 2. CanvasからPNGのバイナリデータを取得 (Bufferの代わりにUint8Arrayを使用)
       const pngDataUrl = canvas.toDataURL('image/png');
