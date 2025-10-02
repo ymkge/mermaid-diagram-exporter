@@ -25,8 +25,9 @@ contextBridge.exposeInMainWorld('api', {
    * @param {number} width - 出力画像の幅
    * @param {number} height - 出力画像の高さ
    * @param {number} scale - 出力画像のスケール
+   * @param {string} theme - Mermaidのテーマ (e.g., 'default', 'dark')
    * @returns {Promise<{success: boolean, error?: string, stderr?: string}>} 保存結果
    */
-  savePngCli: (mermaidCode, outputPath, width, height, scale) => 
-    ipcRenderer.invoke('save-png-cli', mermaidCode, outputPath, width, height, scale),
+  savePngCli: (mermaidCode, outputPath, width, height, scale, theme) => 
+    ipcRenderer.invoke('save-png-cli', mermaidCode, outputPath, width, height, scale, theme),
 });
