@@ -57,7 +57,7 @@ async function renderMermaid() {
 }
 
 /**
- * レンダリングされた図をファイルとして保存する (mermaid-cliを使用)
+ * レンダリングされた図をファイルとして保存する
  */
 async function saveFile() {
   const mermaidCode = mermaidCodeEl.value;
@@ -73,10 +73,25 @@ async function saveFile() {
       return;
     }
 
-    const scale = parseFloat(scaleSelector.value) || 1;
-    const selectedTheme = themeSelector.value;
+    const isSvg = filePath.toLowerCase().endsWith('.svg');
+    let result;
 
-    const result = await window.api.saveFileCli(mermaidCode, filePath, scale, selectedTheme);
+    if (isSvg) {
+      // SVG保存の場合: プレビューのSVGコンテンツを取得して直接保存
+      const previewSvgElement = previewEl.querySelector('svg');
+      if (!previewSvgElement) {
+        alert('プレビューに表示されているSVGが見つかりません。先にレンダリングしてください。');
+        return;
+      }
+      const svgContent = previewSvgElement.outerHTML;
+      result = await window.api.saveSvgContent(svgContent, filePath);
+
+    } else {
+      // PNG保存の場合: 従来通りmmdc（CLI）を使用
+      const scale = parseFloat(scaleSelector.value) || 1;
+      const selectedTheme = themeSelector.value;
+      result = await window.api.saveFileCli(mermaidCode, filePath, scale, selectedTheme);
+    }
 
     if (result.success) {
       alert('ファイルが正常に保存されました。');

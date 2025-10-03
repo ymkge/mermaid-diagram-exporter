@@ -49,59 +49,47 @@ ipcMain.handle('save-dialog', async () => {
 });
 
 ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, theme) => {
+  // このハンドラはPNG保存専用とする
   const tempInputPath = path.join(app.getPath('temp'), `mermaid-input-${Date.now()}.mmd`);
   const mmdcPath = path.join(__dirname, 'node_modules', '.bin', 'mmdc');
 
   try {
     fs.writeFileSync(tempInputPath, mermaidCode);
 
-    // 出力パスの拡張子に応じてコマンドを調整
-    const isSvg = path.extname(outputPath).toLowerCase() === '.svg';
-    let mmdcCommand;
-    if (isSvg) {
-      // SVGの場合はscaleオプションが不要（または意図しない結果になる可能性）なため除外
-      mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -t ${theme}`;
-    } else {
-      mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme}`;
-    }
-
+    const mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme}`;
     console.log(`Executing: ${mmdcCommand}`);
 
     return new Promise((resolve, reject) => {
       exec(mmdcCommand, (error, stdout, stderr) => {
+        fs.unlinkSync(tempInputPath);
+
         if (error) {
-          fs.unlinkSync(tempInputPath);
           console.error(`mmdc exec error: ${error}`);
           console.error(`mmdc stderr: ${stderr}`);
           reject({ success: false, error: error.message, stderr: stderr });
           return;
         }
-
-        // SVGファイルの場合、Googleスプレッドシートで読み込めるように最適化する
-        if (isSvg) {
-          try {
-            let svgContent = fs.readFileSync(outputPath, 'utf8');
-            // XML宣言とDOCTYPE宣言を削除
-            svgContent = svgContent.replace(/<\?xml[^>]*\?>\s*/, '');
-            svgContent = svgContent.replace(/<!DOCTYPE[^>]*>\s*/, '');
-            fs.writeFileSync(outputPath, svgContent, 'utf8');
-            console.log('Cleaned SVG file for Google Sheets compatibility.');
-          } catch (cleanError) {
-            console.error('Could not clean SVG file:', cleanError);
-            // クリーンアップに失敗しても、元のファイルは保存されているので、そのまま続行
-          }
-        }
-
-        fs.unlinkSync(tempInputPath);
         console.log(`mmdc stdout: ${stdout}`);
         resolve({ success: true });
       });
     });
   } catch (error) {
-    console.error('Failed to save file via mmdc:', error);
+    console.error('Failed to save PNG via mmdc:', error);
     if (fs.existsSync(tempInputPath)) {
       fs.unlinkSync(tempInputPath);
     }
+    return { success: false, error: error.message };
+  }
+});
+
+// SVGコンテンツを直接保存するための新しいハンドラ
+ipcMain.handle('save-svg-content', async (event, svgContent, outputPath) => {
+  try {
+    fs.writeFileSync(outputPath, svgContent, 'utf8');
+    console.log('SVG content directly saved to', outputPath);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save SVG content:', error);
     return { success: false, error: error.message };
   }
 });
