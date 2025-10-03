@@ -57,7 +57,8 @@ ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, th
   try {
     fs.writeFileSync(tempInputPath, mermaidCode);
 
-    const mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme}`;
+    const configPath = path.join(__dirname, 'mmdc-config.json');
+    const mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme} -c "${configPath}"`;
     console.log(`Executing: ${mmdcCommand}`);
 
     return new Promise((resolve, reject) => {
