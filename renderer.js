@@ -16,7 +16,9 @@ const initializeMermaid = (theme) => {
     startOnLoad: false,
     theme: theme,
     themeVariables: {
-      fontSize: '20px', // デフォルトのフォントサイズを大きくする
+      // このフォントサイズ設定は、このアプリ上のプレビュー表示にのみ適用される。
+      // PNG出力時のフォント設定は、main.js側で読み込むmmdc-config.jsonで定義される。
+      fontSize: '20px',
     },
   });
 };
@@ -57,7 +59,8 @@ async function renderMermaid() {
 }
 
 /**
- * レンダリングされた図をファイルとして保存する
+ * レンダリングされた図をファイルとして保存する。
+ * 保存形式（PNG/SVG）に応じて、mainプロセスに異なる処理を依頼する。
  */
 async function saveFile() {
   const mermaidCode = mermaidCodeEl.value;
@@ -77,7 +80,9 @@ async function saveFile() {
     let result;
 
     if (isSvg) {
-      // SVG保存の場合: プレビューのSVGコンテンツを取得して直接保存
+      // SVG保存の場合: プレビューに表示されているSVGのHTMLコンテンツを取得し、
+      // mainプロセスに渡して直接ファイルに書き込んでもらう。
+      // (mmdc経由のSVG生成は、互換性の問題があるため使用しない)
       const previewSvgElement = previewEl.querySelector('svg');
       if (!previewSvgElement) {
         alert('プレビューに表示されているSVGが見つかりません。先にレンダリングしてください。');
@@ -87,7 +92,8 @@ async function saveFile() {
       result = await window.api.saveSvgContent(svgContent, filePath);
 
     } else {
-      // PNG保存の場合: 従来通りmmdc（CLI）を使用
+      // PNG保存の場合: mainプロセスにMermaidコードを渡し、
+      // mermaid-cli (mmdc) を使って画像を生成してもらう。
       const scale = parseFloat(scaleSelector.value) || 1;
       const selectedTheme = themeSelector.value;
       result = await window.api.saveFileCli(mermaidCode, filePath, scale, selectedTheme);
@@ -119,4 +125,3 @@ mermaidCodeEl.value = `graph LR
 `;
 // アプリ起動時に初回レンダリングを実行
 renderMermaid();
-

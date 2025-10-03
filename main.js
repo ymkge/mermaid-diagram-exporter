@@ -49,16 +49,21 @@ ipcMain.handle('save-dialog', async () => {
   return filePath;
 });
 
+/**
+ * PNG形式で画像を保存するハンドラ。
+ * mermaid-cli (mmdc) を外部コマンドとして呼び出して実行する。
+ */
 ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, theme) => {
-  // このハンドラはPNG保存専用とする
   const tempInputPath = path.join(app.getPath('temp'), `mermaid-input-${Date.now()}.mmd`);
   const mmdcPath = path.join(__dirname, 'node_modules', '.bin', 'mmdc');
 
   try {
     fs.writeFileSync(tempInputPath, mermaidCode);
 
+    // 日本語フォントなどを指定した設定ファイルを読み込む
     const configPath = path.join(__dirname, 'mmdc-config.json');
     const mmdcCommand = `"${mmdcPath}" -i "${tempInputPath}" -o "${outputPath}" -s ${scale} -t ${theme} -c "${configPath}"`;
+    
     console.log(`Executing: ${mmdcCommand}`);
 
     return new Promise((resolve, reject) => {
@@ -84,10 +89,15 @@ ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, th
   }
 });
 
-// SVGコンテンツを直接保存するための新しいハンドラ
+/**
+ * SVG形式で画像を保存するハンドラ。
+ * mmdcが生成するSVGは一部サービス（Google Driveなど）との互換性が低いため、
+ * レンダラープロセス（フロントエンド）で生成されたSVGコンテンツを直接受け取り、ファイルに書き込む。
+ */
 ipcMain.handle('save-svg-content', async (event, svgContent, outputPath) => {
   try {
-    // juiceライブラリを使って、<style>タグをインラインstyle属性に変換
+    // juiceライブラリを使い、<style>タグをインラインstyle属性に変換する。
+    // これにより、SVGの互換性が向上する（ただし、Google Driveでは依然として問題が残る場合がある）。
     const inlinedSvgContent = juice(svgContent);
 
     fs.writeFileSync(outputPath, inlinedSvgContent, 'utf8');
