@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+const juice = require('juice');
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -85,8 +86,11 @@ ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, th
 // SVGコンテンツを直接保存するための新しいハンドラ
 ipcMain.handle('save-svg-content', async (event, svgContent, outputPath) => {
   try {
-    fs.writeFileSync(outputPath, svgContent, 'utf8');
-    console.log('SVG content directly saved to', outputPath);
+    // juiceライブラリを使って、<style>タグをインラインstyle属性に変換
+    const inlinedSvgContent = juice(svgContent);
+
+    fs.writeFileSync(outputPath, inlinedSvgContent, 'utf8');
+    console.log('SVG content inlined and saved to', outputPath);
     return { success: true };
   } catch (error) {
     console.error('Failed to save SVG content:', error);
