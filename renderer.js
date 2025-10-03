@@ -1,9 +1,8 @@
 // renderer.js
 
-// mermaidライブラリをnode_modulesからインポート
 import mermaid from './node_modules/mermaid/dist/mermaid.esm.min.mjs';
 
-// DOM要素の取得
+// --- DOM要素の取得 --- //
 const mermaidCodeEl = document.getElementById('mermaid-code');
 const previewEl = document.getElementById('preview');
 const renderBtn = document.getElementById('render-btn');
@@ -11,37 +10,30 @@ const saveBtn = document.getElementById('save-btn');
 const themeSelector = document.getElementById('theme-selector');
 const scaleSelector = document.getElementById('scale-selector');
 
+// --- Mermaid初期化関数 --- //
+const initializeMermaid = (theme) => {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: theme,
+    themeVariables: {
+      fontSize: '20px', // デフォルトのフォントサイズを大きくする
+    },
+  });
+};
+
 // 初期Mermaidテーマ設定
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  themeVariables: {
-    fontSize: '20px', // デフォルトのフォントサイズを大きくする
-  },
-});
+initializeMermaid('default');
 
 // --- イベントリスナー --- //
 
-// 「レンダリング/プレビュー」ボタンのクリックイベント
 renderBtn.addEventListener('click', renderMermaid);
+saveBtn.addEventListener('click', saveFile);
 
-// 「PNG保存」ボタンのクリックイベント
-saveBtn.addEventListener('click', saveAsPng);
-
-// テーマセレクターの変更イベント
 themeSelector.addEventListener('change', (event) => {
-    // Mermaidのテーマを更新し、再レンダリング
     const selectedTheme = event.target.value;
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: selectedTheme,
-      themeVariables: {
-        fontSize: '20px', // デフォルトのフォントサイズを大きくする
-      },
-    });
+    initializeMermaid(selectedTheme);
     renderMermaid();
 });
-
 
 // --- 関数 --- //
 
@@ -56,7 +48,6 @@ async function renderMermaid() {
   }
 
   try {
-    // MermaidコードからユニークなIDを生成し、SVGをレンダリング
     const { svg } = await mermaid.render('mermaid-graph-' + Date.now(), code);
     previewEl.innerHTML = svg;
   } catch (error) {
@@ -66,42 +57,40 @@ async function renderMermaid() {
 }
 
 /**
- * レンダリングされたSVGをPNGとして保存する (mermaid-cliを使用)
+ * レンダリングされた図をファイルとして保存する (mermaid-cliを使用)
  */
-async function saveAsPng() {
+async function saveFile() {
   const mermaidCode = mermaidCodeEl.value;
   if (!mermaidCode) {
-    alert('PNGとして保存する前に、まずMermaidコードを入力してください。');
+    alert('保存する前に、まずMermaidコードを入力してください。');
     return;
   }
 
   try {
-    // 1. 保存ダイアログを表示し、保存パスを取得
     const filePath = await window.api.saveDialog();
     if (!filePath) {
-      // ユーザーがダイアログをキャンセルした場合
       console.log('Save cancelled.');
       return;
     }
 
-    // 2. 解像度スケールを取得
     const scale = parseFloat(scaleSelector.value) || 1;
+    const selectedTheme = themeSelector.value;
 
-    // 4. メインプロセスにmermaid-cliでのPNG生成を依頼
-    const selectedTheme = themeSelector.value; // 現在選択されているテーマを取得
-    const result = await window.api.savePngCli(mermaidCode, filePath, scale, selectedTheme); // テーマ情報を追加
+    const result = await window.api.saveFileCli(mermaidCode, filePath, scale, selectedTheme);
 
     if (result.success) {
-      alert('PNGファイルが正常に保存されました。');
+      alert('ファイルが正常に保存されました。');
     } else {
       alert(`保存に失敗しました: ${result.error}\n${result.stderr || ''}`);
     }
 
   } catch (error) {
-    console.error('Failed to save PNG:', error);
-    alert(`PNGの保存中にエラーが発生しました: ${error.message}`);
+    console.error('Failed to save file:', error);
+    alert(`ファイルの保存中にエラーが発生しました: ${error.message}`);
   }
 }
+
+// --- 初期処理 --- //
 
 // 初期表示用にサンプルコードをセット
 mermaidCodeEl.value = `graph LR
@@ -115,3 +104,4 @@ mermaidCodeEl.value = `graph LR
 `;
 // アプリ起動時に初回レンダリングを実行
 renderMermaid();
+
