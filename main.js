@@ -69,14 +69,30 @@ ipcMain.handle('save-file-cli', async (event, mermaidCode, outputPath, scale, th
 
     return new Promise((resolve, reject) => {
       exec(mmdcCommand, (error, stdout, stderr) => {
-        fs.unlinkSync(tempInputPath);
-
         if (error) {
+          fs.unlinkSync(tempInputPath);
           console.error(`mmdc exec error: ${error}`);
           console.error(`mmdc stderr: ${stderr}`);
           reject({ success: false, error: error.message, stderr: stderr });
           return;
         }
+
+        // SVGファイルの場合、Googleスプレッドシートで読み込めるように最適化する
+        if (isSvg) {
+          try {
+            let svgContent = fs.readFileSync(outputPath, 'utf8');
+            // XML宣言とDOCTYPE宣言を削除
+            svgContent = svgContent.replace(/<\?xml[^>]*\?>\s*/, '');
+            svgContent = svgContent.replace(/<!DOCTYPE[^>]*>\s*/, '');
+            fs.writeFileSync(outputPath, svgContent, 'utf8');
+            console.log('Cleaned SVG file for Google Sheets compatibility.');
+          } catch (cleanError) {
+            console.error('Could not clean SVG file:', cleanError);
+            // クリーンアップに失敗しても、元のファイルは保存されているので、そのまま続行
+          }
+        }
+
+        fs.unlinkSync(tempInputPath);
         console.log(`mmdc stdout: ${stdout}`);
         resolve({ success: true });
       });
