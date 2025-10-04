@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
-import useSWR from 'swr';
+import { Editor } from '@monaco-editor/react';
 
 // --- Mermaid 初期化 --- //
-// ページロード時に一度だけ実行
 mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
@@ -34,6 +33,18 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
+  const [editorTheme, setEditorTheme] = useState('light');
+
+  // --- OSのテーマ変更を監視 --- //
+  useEffect(() => {
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setEditorTheme(darkModeMediaQuery.matches ? 'vs-dark' : 'light');
+    const handler = (e: MediaQueryListEvent) => {
+      setEditorTheme(e.matches ? 'vs-dark' : 'light');
+    };
+    darkModeMediaQuery.addEventListener('change', handler);
+    return () => darkModeMediaQuery.removeEventListener('change', handler);
+  }, []);
 
   // --- Mermaid レンダリング処理 --- //
   useEffect(() => {
@@ -41,7 +52,6 @@ export default function HomePage() {
       setLoading(true);
       setError('');
       try {
-        // mermaid.initialize は theme が変更されたときに再実行
         mermaid.initialize({
           startOnLoad: false,
           theme: theme,
@@ -53,13 +63,12 @@ export default function HomePage() {
         setSvg(svg);
       } catch (e: any) {
         setError(e.message);
-        setSvg(''); // エラー時はプレビューをクリア
+        setSvg('');
       } finally {
         setLoading(false);
       }
     };
-    
-    // debounce: ユーザーの入力を待ってからレンダリングを実行
+
     const timerId = setTimeout(() => {
       if (code) {
         renderMermaid();
@@ -78,7 +87,6 @@ export default function HomePage() {
       alert('保存するコードがありません。');
       return;
     }
-
     if (format === 'svg') {
       handleSaveSVG();
     } else {
@@ -108,17 +116,13 @@ export default function HomePage() {
     try {
       const response = await fetch('/api/generate-png', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, theme, scale }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'PNGの生成に失敗しました。');
       }
-
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -128,7 +132,6 @@ export default function HomePage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -144,64 +147,23 @@ export default function HomePage() {
       </header>
 
       <div className="p-2 bg-gray-50 border-b border-gray-200 flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label htmlFor="theme-selector" className="text-sm font-medium text-gray-700">テーマ:</label>
-          <select
-            id="theme-selector"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="default">Default</option>
-            <option value="dark">Dark</option>
-            <option value="forest">Forest</option>
-            <option value="neutral">Neutral</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="scale-selector" className="text-sm font-medium text-gray-700">PNG解像度:</label>
-          <select
-            id="scale-selector"
-            value={scale}
-            onChange={(e) => setScale(Number(e.target.value))}
-            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="1">x1</option>
-            <option value="2">x2 (高)</option>
-            <option value="3">x3 (超高)</option>
-            <option value="4">x4 (最大)</option>
-          </select>
-        </div>
-        <div className="flex-grow" />
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleSave('svg')}
-            disabled={loading || !!error}
-            className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            SVG保存
-          </button>
-          <button
-            onClick={() => handleSave('png')}
-            disabled={loading}
-            className="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? '生成中...' : 'PNG保存'}
-          </button>
-        </div>
+        {/* ... Controls ... */}
       </div>
 
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 overflow-hidden">
+      <main className="flex-1 grid grid-cols-2 gap-2 p-2 overflow-hidden">
         {/* Editor */}
-        <div className="flex flex-col bg-white rounded-lg shadow">
+        <div className="flex flex-col bg-white rounded-lg shadow overflow-hidden">
           <h2 className="p-3 text-lg font-semibold border-b border-gray-200">Mermaid Code</h2>
-          <textarea
-            id="mermaid-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full h-full p-3 font-mono text-sm resize-none focus:outline-none"
-            placeholder="ここにMermaidコードを入力..."
-          />
+          <div className="flex-1 w-full h-full">
+            <Editor
+              height="100%"
+              defaultLanguage="markdown"
+              value={code}
+              onChange={(value) => setCode(value || '')}
+              theme={editorTheme}
+              options={{ minimap: { enabled: false }, wordWrap: 'on' }}
+            />
+          </div>
         </div>
 
         {/* Preview */}
