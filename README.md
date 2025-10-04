@@ -1,61 +1,36 @@
-# Mermaid Diagram Exporter
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 概要
+## Getting Started
 
-このアプリケーションは、[Mermaid](https://mermaid-js.github.io/mermaid/#/) で記述されたフロー図やダイアグラムを、PNGまたはSVG画像として簡単にエクスポートするためのクロスプラットフォーム対応デスクトップアプリケーションです。
+First, run the development server:
 
-JOBフロー図などの視覚化されたプロセスを、ドキュメントやプレゼンテーションに簡単に貼り付けられる形式で保存することを目的としています。
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## 主な機能
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **Mermaidコード入力**: 大きなテキストエリアに直接Mermaidコードを記述できます。
-- **ライブプレビュー**: 入力されたコードを即座にレンダリングし、プレビュー表示します。
-- **テーマ選択**: `default`, `dark`, `forest`, `neutral` などのテーマを切り替えて、ダイアグラムの見た目を変更できます。
-- **PNG/SVGエクスポート**: レンダリングされたダイアグラムを、PNGまたはSVG形式で保存できます。
-- **高解像度PNG出力**: PNG形式で保存する際、解像度（スケール）を選択できます。
-- **日本語フォント対応**: PNG出力時には、縮小しても読みやすい日本語フォント（游ゴシック、メイリオなど）が適用されるように設定されています。
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 注意事項
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- **SVGの互換性**: SVG形式は、どの環境でも表示できることを保証するものではありません。特に、GoogleスプレッドシートやGoogleドライブなど、一部のWebサービスでは生成されたSVGを画像として正しく認識できない場合があります。
-- **文字の見切れ**: スプレッドシートなどに画像を貼り付けてリサイズした際に文字が不鮮明になる場合は、**解像度を「x4」に設定したPNG形式で保存する**ことを強く推奨します。
+## Learn More
 
-## 技術スタック
+To learn more about Next.js, take a look at the following resources:
 
-- **フレームワーク**: [Electron](https://www.electronjs.org/)
-- **ダイアグラムレンダリング**: [Mermaid.js](https://mermaid-js.github.io/mermaid/#/)
-- **画像エクスポート**: [mermaid-cli](https://github.com/mermaid-js/mermaid-cli), [juice](https://github.com/Automattic/juice)
-- **ランタイム**: [Node.js](https://nodejs.org/)
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## インストールと実行方法
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### 前提条件
+## Deploy on Vercel
 
-- [Node.js](https://nodejs.org/) (LTS版を推奨) がインストールされていること。
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### 手順
-
-1.  **依存関係のインストール**
-    プロジェクトのルートディレクトリで以下のコマンドを実行し、必要なライブラリをインストールします。
-    ```bash
-    npm install
-    ```
-
-2.  **アプリケーションの起動**
-    インストール完了後、以下のコマンドでアプリケーションを起動します。
-    ```bash
-    npm start
-    ```
-
-## 使い方
-
-1.  アプリケーションを起動すると、ウィンドウが表示されます。
-2.  左側のテキストエリアに、`graph LR` などのMermaid形式のコードを入力します。（サンプルコードが初期表示されています）
-3.  **「レンダリング / プレビュー」** ボタンをクリックすると、右側のプレビューエリアにダイアグラムが表示されます。
-4.  上部のドロップダウンメニューから、お好みの **テーマ** を選択すると、プレビューの見た目が変わります。
-5.  PNGで保存する場合は、**解像度** を選択します。高解像度を選ぶほど、出力されるPNGの文字や線が鮮明になります。
-6.  **「保存(PNG or SVG)」** ボタンをクリックするとファイル保存ダイアログが開きます。ファイルの種類（PNGまたはSVG）を選択し、ファイル名と保存場所を指定して保存してください。
-
-## ライセンス
-
-このプロジェクトは ISC License のもとで公開されています。
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -1,25 +1,31 @@
 {
   "name": "mermaid-to-png-app",
-  "version": "1.0.0",
-  "description": "A desktop app to render Mermaid diagrams and export as PNG.",
-  "main": "main.js",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "keywords": [
-    "Mermaid",
-    "Electron",
-    "PNG"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "electron": "^31.0.2",
+    "@mermaid-js/mermaid-cli": "^11.12.0",
     "juice": "^11.0.3",
-    "mermaid": "^10.9.1"
+    "mermaid": "^11.12.0",
+    "next": "15.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "swr": "^2.3.6"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^11.12.0"
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
