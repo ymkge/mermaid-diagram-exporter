@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mermaid Diagram Exporter (Web App)
 
-## Getting Started
+## 概要
 
-First, run the development server:
+[Mermaid](https://mermaid-js.github.io/mermaid/#/) で記述されたフロー図やダイアグラムを、PNGまたはSVG画像として簡単にエクスポートするためのWebアプリケーションです。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+JOBフロー図などの視覚化されたプロセスを、ドキュメントやプレゼンテーションに簡単に貼り付けられる形式で保存することを目的としています。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 主な機能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **高機能エディタ**: シンタックスハイライトや自動補完が効くMonaco Editorを搭載。
+- **自動ライブプレビュー**: 入力されたコードを即座にレンダリングし、プレビューを自動更新します。
+- **テーマ選択**: `default`, `dark`, `forest`, `neutral` などのテーマを切り替えて、ダイアグラムの見た目を変更できます。
+- **PNG/SVGエクスポート**: レンダリングされたダイアグラムを、PNGまたはSVG形式でダウンロードできます。
+- **高解像度PNG出力**: PNG形式で保存する際、解像度（スケール）を選択できます。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 使い方
 
-## Learn More
+1. アプリケーションのURLにアクセスします。
+2. 左側のエディタに、`graph LR` などのMermaid形式のコードを入力します。（サンプルコードが初期表示されています）
+3. コードを編集すると、右側のプレビューエリアが自動で更新されます。
+4. 上部のドロップダウンメニューから、お好みの **テーマ** や **PNG解像度** を選択します。
+5. **「SVG保存」** または **「PNG保存」** ボタンをクリックすると、画像ファイルがダウンロードされます。
 
-To learn more about Next.js, take a look at the following resources:
+## 技術スタック
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **フレームワーク**: [Next.js](https://nextjs.org/)
+- **UIライブラリ**: [React](https://react.dev/)
+- **言語**: [TypeScript](https://www.typescriptlang.org/)
+- **CSS**: [Tailwind CSS](https://tailwindcss.com/)
+- **ダイアグラムレンダリング**: [Mermaid.js](https://mermaid-js.github.io/mermaid/#/)
+- **PNG生成**: [@mermaid-js/mermaid-cli](https://github.com/mermaid-js/mermaid-cli)
+- **コードエディタ**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ローカルでの開発方法
 
-## Deploy on Vercel
+### 前提条件
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Node.js](https://nodejs.org/) (LTS版を推奨) がインストールされていること。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 手順
+
+1.  **依存関係のインストール**
+    プロジェクトのルートディレクトリで以下のコマンドを実行し、必要なライブラリをインストールします。
+    ```bash
+    npm install
+    ```
+
+2.  **開発サーバーの起動**
+    インストール完了後、以下のコマンドで開発サーバーを起動します。
+    ```bash
+    npm run dev
+    ```
+
+3.  ブラウザで `http://localhost:3000` を開きます。
