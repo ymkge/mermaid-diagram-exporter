@@ -147,7 +147,51 @@ export default function HomePage() {
       </header>
 
       <div className="p-2 bg-gray-50 border-b border-gray-200 flex items-center gap-4 flex-wrap">
-        {/* ... Controls ... */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="theme-selector" className="text-sm font-medium text-gray-700">テーマ:</label>
+          <select
+            id="theme-selector"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="default">Default</option>
+            <option value="dark">Dark</option>
+            <option value="forest">Forest</option>
+            <option value="neutral">Neutral</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="scale-selector" className="text-sm font-medium text-gray-700">PNG解像度:</label>
+          <select
+            id="scale-selector"
+            value={scale}
+            onChange={(e) => setScale(Number(e.target.value))}
+            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="1">x1</option>
+            <option value="2">x2 (高)</option>
+            <option value="3">x3 (超高)</option>
+            <option value="4">x4 (最大)</option>
+          </select>
+        </div>
+        <div className="flex-grow" />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleSave('svg')}
+            disabled={loading || !!error}
+            className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            SVG保存
+          </button>
+          <button
+            onClick={() => handleSave('png')}
+            disabled={loading}
+            className="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? '生成中...' : 'PNG保存'}
+          </button>
+        </div>
       </div>
 
       <main className="flex-1 grid grid-cols-2 gap-2 p-2 overflow-hidden">
