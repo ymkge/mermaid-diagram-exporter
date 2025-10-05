@@ -60,14 +60,14 @@ export const useMermaid = () => {
 
   // Mermaid レンダリング処理
   useEffect(() => {
-    mermaid.initialize({ startOnLoad: false });
     const renderMermaid = async () => {
       setIsRendering(true);
       try {
         mermaid.initialize({
           startOnLoad: false,
           theme: mermaidTheme,
-          themeVariables: { fontSize: '16px' },
+          themeVariables: { fontSize: '32px' },
+          securityLevel: 'strict',
         });
         const { svg } = await mermaid.render('mermaid-graph-' + Date.now(), code);
         setSvg(svg);
@@ -167,36 +167,28 @@ export const useMermaid = () => {
   };
 
   const handleCopyToClipboard = async () => {
-    if (!svg) return toast.warning('コピーするプレビューがありません。');
+    if (!code) return toast.warning('コードがありません。');
     setIsGenerating(true);
     try {
-      const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const dpr = window.devicePixelRatio || 1;
-        const finalScale = scale * dpr;
-        canvas.width = img.width * finalScale;
-        canvas.height = img.height * finalScale;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvasコンテキストの取得に失敗しました。');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(async (blob) => {
-          if (!blob) throw new Error('クリップボード用の画像データの生成に失敗しました。');
-          try {
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-            toast.success('画像をクリップボードにコピーしました！');
-          } catch (err: any) {
-            throw new Error(`クリップボードへのコピーに失敗しました: ${err.message}`);
-          } finally {
-            setIsGenerating(false);
-          }
-        }, 'image/png');
-      };
-      img.onerror = () => { throw new Error('画像の読み込みに失敗しました。'); };
-      img.src = dataUrl;
+      const response = await fetch('/api/generate-png', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, theme: mermaidTheme, scale }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PNGの生成に失敗しました。');
+      }
+
+      const blob = await response.blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast.success('画像をクリップボードにコピーしました！');
+
     } catch (e: any) {
+      console.error('Copy to clipboard failed:', e);
       toast.error('クリップボードへのコピーに失敗しました。', { description: e.message });
+    } finally {
       setIsGenerating(false);
     }
   };
