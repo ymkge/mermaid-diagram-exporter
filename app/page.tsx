@@ -13,7 +13,7 @@ export default function HomePage() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <Header />
       <ControlPanel {...mermaidProps} />
-      <main className="grid md:grid-cols-2 gap-6">
+      <main className="grid grid-cols-2 gap-6">
         <EditorCard code={mermaidProps.code} setCode={mermaidProps.setCode} />
         <PreviewCard svg={mermaidProps.svg} isRendering={mermaidProps.isRendering} />
       </main>
