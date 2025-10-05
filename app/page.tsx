@@ -115,15 +115,17 @@ export default function HomePage() {
   }, [code, theme]);
 
   // --- ファイル保存処理 --- //
-  const handleSave = async (format: 'svg' | 'png') => {
+  const handleSave = async (format: 'svg' | 'png' | 'pdf') => {
     if (!code) {
       alert('保存するコードがありません。');
       return;
     }
     if (format === 'svg') {
       handleSaveSVG();
-    } else {
+    } else if (format === 'png') {
       handleSavePNG();
+    } else {
+      handleSavePDF();
     }
   };
 
@@ -161,6 +163,35 @@ export default function HomePage() {
       const a = document.createElement('a');
       a.href = url;
       a.download = 'diagram.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSavePDF = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, theme }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PDFの生成に失敗しました。');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'diagram.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -233,6 +264,13 @@ export default function HomePage() {
             className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             SVG保存
+          </button>
+          <button
+            onClick={() => handleSave('pdf')}
+            disabled={loading}
+            className="px-4 py-2 font-semibold text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? '生成中...' : 'PDF保存'}
           </button>
           <button
             onClick={() => handleSave('png')}
