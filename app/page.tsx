@@ -203,6 +203,61 @@ export default function HomePage() {
     }
   };
 
+  const handleCopyToClipboard = async () => {
+    if (!svg) {
+      alert('コピーするプレビューがありません。');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // SVGをBase64データURLに変換
+      const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = img.width * dpr;
+        canvas.height = img.height * dpr;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('Canvasコンテキストの取得に失敗しました。');
+        }
+        ctx.scale(dpr, dpr);
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            throw new Error('クリップボード用の画像データの生成に失敗しました。');
+          }
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            alert('画像をクリップボードにコピーしました！');
+          } catch (err: any) {
+            setError(`クリップボードへのコピーに失敗しました: ${err.message}`);
+          } finally {
+            setLoading(false);
+          }
+        }, 'image/png');
+      };
+
+      img.onerror = () => {
+        throw new Error('画像の読み込みに失敗しました。');
+      };
+
+      img.src = dataUrl;
+
+    } catch (e: any) {
+      setError(e.message);
+      setLoading(false);
+    }
+  };
+
   // --- UI --- //
   return (
     <div className="flex flex-col h-screen bg-gray-100 font-sans">
@@ -278,6 +333,13 @@ export default function HomePage() {
             className="px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? '生成中...' : 'PNG保存'}
+          </button>
+          <button
+            onClick={() => handleCopyToClipboard()}
+            disabled={loading || !!error}
+            className="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            コピー
           </button>
         </div>
       </div>
