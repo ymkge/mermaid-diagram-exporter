@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import mermaid from 'mermaid';
 import { toast } from 'sonner';
 
-// --- サンプルコード定義 --- //
+// --- 定数定義 --- //
 export const sampleCodes = [
   {
     label: 'フローチャート',
@@ -58,7 +58,7 @@ export const useMermaid = () => {
   const [isRendering, setIsRendering] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Mermaid レンダリング処理
+  // Mermaid レンダリング処理 (クライアントサイド)
   useEffect(() => {
     const renderMermaid = async () => {
       setIsRendering(true);
@@ -91,43 +91,62 @@ export const useMermaid = () => {
     return () => clearTimeout(timerId);
   }, [code, mermaidTheme]);
 
-  // ファイル保存処理
-  const handleSaveSVG = () => {
-    if (!svg) return toast.warning('プレビューがありません。');
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
+  // --- ファイル生成・操作関連 --- //
+
+  /**
+   * サーバーサイドで画像/PDFを生成し、Blobを返す
+   * @param format 生成するフォーマット ('png' | 'pdf')
+   */
+  const generateBlob = async (format: 'png' | 'pdf'): Promise<Blob> => {
+    const endpoint = `/api/generate-${format}`;
+    const body = format === 'png' 
+      ? { code, theme: mermaidTheme, scale }
+      : { code, theme: mermaidTheme };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `${format.toUpperCase()}の生成に失敗しました。`);
+    }
+    return response.blob();
+  };
+
+  /**
+   * 指定されたBlobをファイルとしてダウンロードする
+   * @param blob ダウンロードするBlob
+   * @param filename 保存するファイル名
+   */
+  const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'diagram.svg';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // SVG保存処理
+  const handleSaveSVG = () => {
+    if (!svg) return toast.warning('プレビューがありません。');
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    downloadBlob(blob, 'diagram.svg');
     toast.success('SVGファイルを保存しました。');
   };
 
+  // PNG保存処理
   const handleSavePNG = async () => {
     if (!code) return toast.warning('コードがありません。');
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-png', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, theme: mermaidTheme, scale }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'PNGの生成に失敗しました。');
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'diagram.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const blob = await generateBlob('png');
+      downloadBlob(blob, 'diagram.png');
       toast.success('PNGファイルを保存しました。');
     } catch (e: any) {
       toast.error('PNGの生成に失敗しました。', { description: e.message });
@@ -136,28 +155,13 @@ export const useMermaid = () => {
     }
   };
 
+  // PDF保存処理
   const handleSavePDF = async () => {
     if (!code) return toast.warning('コードがありません。');
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, theme: mermaidTheme }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'PDFの生成に失敗しました。');
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'diagram.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const blob = await generateBlob('pdf');
+      downloadBlob(blob, 'diagram.pdf');
       toast.success('PDFファイルを保存しました。');
     } catch (e: any) {
       toast.error('PDFの生成に失敗しました。', { description: e.message });
@@ -166,25 +170,14 @@ export const useMermaid = () => {
     }
   };
 
+  // クリップボードへのコピー処理
   const handleCopyToClipboard = async () => {
     if (!code) return toast.warning('コードがありません。');
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-png', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, theme: mermaidTheme, scale }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'PNGの生成に失敗しました。');
-      }
-
-      const blob = await response.blob();
+      const blob = await generateBlob('png');
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       toast.success('画像をクリップボードにコピーしました！');
-
     } catch (e: any) {
       console.error('Copy to clipboard failed:', e);
       toast.error('クリップボードへのコピーに失敗しました。', { description: e.message });
