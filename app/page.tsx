@@ -14,7 +14,10 @@ mermaid.initialize({
 });
 
 // --- サンプルコード --- //
-const initialCode = `graph LR
+const sampleCodes = [
+  {
+    label: 'フローチャート',
+    code: `graph LR
     A[要件定義] --> B(設計);
     B --> C{実装};
     C -->|機能A| D[コーディングA];
@@ -22,11 +25,41 @@ const initialCode = `graph LR
     D --> F[テストA];
     E --> F[テストA];
     F --> G((リリース));
-`;
+`,
+  },
+  {
+    label: 'シーケンス図',
+    code: `sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>John: Hello John, how are you?
+    loop Healthcheck
+        John->>John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts<br/>prevail...
+    John-->>Alice: Great!
+    John->>Bob: How about you?
+    Bob-->>John: Jolly good!
+`,
+  },
+  {
+    label: 'ガントチャート',
+    code: `gantt
+    title A Gantt Diagram
+    dateFormat  YYYY-MM-DD
+    section Section
+    A task           :a1, 2014-01-01, 30d
+    Another task     :after a1  , 20d
+    section Another
+    Task in sec      :2014-01-12  , 12d
+    another task      : 24d
+`,
+  },
+];
 
 // --- メインコンポーネント --- //
 export default function HomePage() {
-  const [code, setCode] = useState(initialCode);
+  const [code, setCode] = useState(sampleCodes[0].code);
   const [svg, setSvg] = useState('');
   const [theme, setTheme] = useState('default');
   const [scale, setScale] = useState(2);
@@ -147,6 +180,23 @@ export default function HomePage() {
       </header>
 
       <div className="p-2 bg-gray-50 border-b border-gray-200 flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <label htmlFor="sample-selector" className="text-sm font-medium text-gray-700">サンプル:</label>
+          <select
+            id="sample-selector"
+            onChange={(e) => {
+              const selectedSample = sampleCodes.find(sample => sample.label === e.target.value);
+              if (selectedSample) {
+                setCode(selectedSample.code);
+              }
+            }}
+            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            {sampleCodes.map(sample => (
+              <option key={sample.label} value={sample.label}>{sample.label}</option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-2">
           <label htmlFor="theme-selector" className="text-sm font-medium text-gray-700">テーマ:</label>
           <select
