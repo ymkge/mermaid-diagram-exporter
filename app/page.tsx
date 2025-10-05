@@ -220,14 +220,17 @@ export default function HomePage() {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = img.width * dpr;
-        canvas.height = img.height * dpr;
+        const finalScale = scale * dpr;
+
+        canvas.width = img.width * finalScale;
+        canvas.height = img.height * finalScale;
+
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           throw new Error('Canvasコンテキストの取得に失敗しました。');
         }
-        ctx.scale(dpr, dpr);
-        ctx.drawImage(img, 0, 0);
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob(async (blob) => {
           if (!blob) {
@@ -298,7 +301,7 @@ export default function HomePage() {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="scale-selector" className="text-sm font-medium text-gray-700">PNG解像度:</label>
+          <label htmlFor="scale-selector" className="text-sm font-medium text-gray-700">エクスポート解像度:</label>
           <select
             id="scale-selector"
             value={scale}
