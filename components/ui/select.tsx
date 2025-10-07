@@ -121,6 +121,9 @@ const SelectItem = React.forwardRef<
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
+    // HACK: Radix UIのPortal内でTailwindの`bg-popover`クラスが正しく適用されない。
+    // これはビルドプロセスでクラスがパージされる問題の可能性が高い。
+    // テーマに対応したCSS変数をインラインスタイルで直接指定することで、この問題を確実に回避する。
     style={{ backgroundColor: 'hsl(var(--popover))' }}
     {...props}
   >
