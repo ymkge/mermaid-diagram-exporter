@@ -3,6 +3,7 @@
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 interface EditorCardProps {
   code: string;
@@ -10,7 +11,27 @@ interface EditorCardProps {
 }
 
 export const EditorCard = ({ code, setCode }: EditorCardProps) => {
-  const { theme: appTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Code</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-hidden h-[60vh]">
+            {/* Or a loading spinner */}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -24,7 +45,7 @@ export const EditorCard = ({ code, setCode }: EditorCardProps) => {
             defaultLanguage="markdown"
             value={code}
             onChange={(value) => setCode(value || "")}
-            theme={appTheme === "dark" ? "vs-dark" : "light"}
+            theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
             options={{
               minimap: { enabled: false },
               wordWrap: "on",
