@@ -65,7 +65,7 @@ export const useMermaid = () => {
       try {
         mermaid.initialize({
           startOnLoad: false,
-          theme: "default",
+          theme: mermaidTheme,
           themeVariables: { fontSize: '32px' },
           securityLevel: 'strict',
         });
