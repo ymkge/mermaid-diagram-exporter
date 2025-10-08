@@ -19,7 +19,7 @@ export const PreviewCard = ({ svg, isRendering }: PreviewCardProps) => {
         // HACK: ダークモード時にTailwindの`bg-white`クラスが正しく適用されない問題への対策。
         // select.tsxの事例と同様に、ビルドプロセスでクラスがパージされる問題の可能性が高い。
         // インラインスタイルで直接背景色を指定することで、この問題を確実に回避する。
-        style={{ backgroundColor: '#FFFFFF' }}
+        style={{ backgroundColor: '#808080' }}
       >
         {isRendering ? (
           <div className="flex items-center gap-2 text-muted-foreground">
