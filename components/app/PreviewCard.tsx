@@ -14,7 +14,13 @@ export const PreviewCard = ({ svg, isRendering }: PreviewCardProps) => {
       <CardHeader>
         <CardTitle>Preview</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-start justify-start h-[60vh] overflow-auto">
+      <CardContent
+        className="flex items-start justify-start h-[60vh] overflow-auto"
+        // HACK: ダークモード時にTailwindの`bg-white`クラスが正しく適用されない問題への対策。
+        // select.tsxの事例と同様に、ビルドプロセスでクラスがパージされる問題の可能性が高い。
+        // インラインスタイルで直接背景色を指定することで、この問題を確実に回避する。
+        style={{ backgroundColor: '#FFFFFF' }}
+      >
         {isRendering ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
