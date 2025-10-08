@@ -65,16 +65,8 @@ export const useMermaid = () => {
       try {
         mermaid.initialize({
           startOnLoad: false,
-          theme: "base", // テーマの基礎を 'base' に変更
-          themeVariables: {
-            fontSize: '32px',
-            background: '#FFFFFF',         // 背景を白に
-            primaryColor: '#ECECFF',       // ノードの背景色
-            primaryTextColor: '#000',      // ノードの文字色
-            primaryBorderColor: '#9370DB', // ノードの枠線
-            lineColor: '#333',             // 線や矢印の色
-            textColor: '#333',             // ラベル等の文字色
-          },
+          theme: "default",
+          themeVariables: { fontSize: '32px' },
           securityLevel: 'strict',
         });
         const { svg } = await mermaid.render('mermaid-graph-' + Date.now(), code);
