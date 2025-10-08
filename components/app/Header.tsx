@@ -7,7 +7,7 @@ export const Header = () => {
         Mermaid Diagram Exporter
       </h1>
       <p className="mt-2 text-lg text-muted-foreground">
-        Mermaid.jsのダイアグラムを、PNG, SVG, PDFにエクスポート、またはクリップボードにコピーします。
+        Mermaidのコードからグラフを作成し、PNG, SVG, PDFにエクスポート、またはクリップボードにコピー可能です。
       </p>
     </header>
   );
