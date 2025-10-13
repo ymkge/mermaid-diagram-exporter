@@ -63,8 +63,14 @@ export async function POST(request: Request) {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    let errorMessage = 'Internal Server Error';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
