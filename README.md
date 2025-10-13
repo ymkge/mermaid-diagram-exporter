@@ -1,4 +1,4 @@
-# Mermaid Diagram Exporter (Web App) 
+# Mermaid Diagram Exporter (Web App)  
 <img width="1336" height="761" alt="スクリーンショット 2025-10-08 22 16 50" src="https://github.com/user-attachments/assets/da925cd8-0ba9-4e12-8d3a-4257ca178de8" />
 
 ## 概要
