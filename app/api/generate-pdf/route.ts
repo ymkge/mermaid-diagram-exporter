@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const tempInputPath = path.join('/tmp', `mermaid-input-${Date.now()}.mmd`);
     const tempOutputPath = path.join('/tmp', `mermaid-output-${Date.now()}.pdf`);
     
-    // mmdc の実行パス
     const mmdcPath = path.resolve(process.cwd(), 'node_modules', '.bin', 'mmdc');
 
     await fs.writeFile(tempInputPath, code);
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
 
     // 日本語フォント対応のための設定
     const mmdcConfig = {
-      "fontFamily": ""游ゴシック体", "Yu Gothic", "メイリオ", Meiryo, sans-serif",
+      "fontFamily": "\"游ゴシック体\", \"Yu Gothic\", \"メイリオ\", Meiryo, sans-serif",
       "puppeteerConfigFile": puppeteerConfig
     };
     const configPath = path.join('/tmp', `mmdc-config-${Date.now()}.json`);
@@ -50,10 +49,8 @@ export async function POST(request: Request) {
       });
     });
 
-    // --- 生成されたPDFを読み込んでレスポンスとして返す --- //
     const pdfBuffer = await fs.readFile(tempOutputPath);
 
-    // --- 一時ファイルを削除 --- //
     await fs.unlink(tempInputPath);
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
