@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     const tempInputPath = path.join('/tmp', `mermaid-input-${Date.now()}.mmd`);
     const tempOutputPath = path.join('/tmp', `mermaid-output-${Date.now()}.png`);
     
-    // mmdcの実体であるJSファイルを直接指定
-    const cliPath = path.resolve(process.cwd(), 'node_modules', '@mermaid-js', 'mermaid-cli', 'dist', 'cli.js');
+    // 正しいパスに修正
+    const cliPath = path.resolve(process.cwd(), 'node_modules', '@mermaid-js', 'mermaid-cli', 'src', 'cli.js');
 
     await fs.writeFile(tempInputPath, code);
 
@@ -33,7 +33,6 @@ export async function POST(request: Request) {
     const configPath = path.join('/tmp', `mmdc-config-${Date.now()}.json`);
     await fs.writeFile(configPath, JSON.stringify(mmdcConfig));
 
-    // nodeで直接cli.jsを実行するコマンド
     const command = `node ${cliPath} -i ${tempInputPath} -o ${tempOutputPath} -t ${theme || 'default'} -s ${scale || 2} -c ${configPath}`;
 
     await new Promise<void>((resolve, reject) => {
