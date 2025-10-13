@@ -9,10 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sampleCodes } from "@/hooks/use-mermaid";
+import { sampleCodes, type MermaidTheme } from "@/hooks/use-mermaid";
 import { FileImage, FileText, Copy, Download, Loader2 } from "lucide-react";
 
-const themeOptions = ['default', 'dark', 'forest', 'neutral'];
+const themeOptions: Exclude<MermaidTheme, undefined | null>[] = ['default', 'dark', 'forest', 'neutral'];
 const scaleOptions = [
   { value: 1, label: 'x1' },
   { value: 2, label: 'x2 (高)' },
@@ -22,8 +22,8 @@ const scaleOptions = [
 
 interface ControlPanelProps {
   setCode: (code: string) => void;
-  mermaidTheme: string;
-  setMermaidTheme: (theme: string) => void;
+  mermaidTheme: MermaidTheme;
+  setMermaidTheme: (theme: MermaidTheme) => void;
   scale: number;
   setScale: (scale: number) => void;
   isGenerating: boolean;
@@ -61,8 +61,8 @@ export const ControlPanel = ({ ...props }: ControlPanelProps) => {
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">テーマ</label>
           <Select
-            onValueChange={props.setMermaidTheme}
-            defaultValue={props.mermaidTheme}
+            onValueChange={(v) => props.setMermaidTheme(v as MermaidTheme)}
+            value={props.mermaidTheme}
           >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="テーマを選択" />
