@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     const tempInputPath = path.join('/tmp', `mermaid-input-${Date.now()}.mmd`);
     const tempOutputPath = path.join('/tmp', `mermaid-output-${Date.now()}.png`);
     
-    // 正しいパスに修正
-    const cliPath = path.resolve(process.cwd(), 'node_modules', '@mermaid-js', 'mermaid-cli', 'src', 'cli.js');
+    // プロジェクト内のコピーを参照するようパスを変更
+    const cliPath = path.resolve(process.cwd(), 'lib', 'mmdc-bin', 'src', 'cli.js');
 
     await fs.writeFile(tempInputPath, code);
 
