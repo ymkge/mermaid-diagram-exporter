@@ -55,7 +55,12 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+    // BufferからArrayBufferを安全に抽出してBlobを作成
+    const arrayBuffer = pdfBuffer.buffer.slice(
+      pdfBuffer.byteOffset,
+      pdfBuffer.byteOffset + pdfBuffer.byteLength
+    );
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
 
     return new NextResponse(blob, {
       status: 200,

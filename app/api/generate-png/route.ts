@@ -55,7 +55,12 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    const blob = new Blob([imageBuffer], { type: 'image/png' });
+    // BufferからArrayBufferを安全に抽出してBlobを作成
+    const arrayBuffer = imageBuffer.buffer.slice(
+      imageBuffer.byteOffset,
+      imageBuffer.byteOffset + imageBuffer.byteLength
+    );
+    const blob = new Blob([arrayBuffer], { type: 'image/png' });
 
     return new NextResponse(blob, {
       status: 200,
