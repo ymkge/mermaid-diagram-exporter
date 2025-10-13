@@ -55,7 +55,9 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    return new NextResponse(pdfBuffer, {
+    const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+
+    return new NextResponse(blob, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

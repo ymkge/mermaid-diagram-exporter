@@ -55,7 +55,9 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    return new NextResponse(imageBuffer, {
+    const blob = new Blob([imageBuffer], { type: 'image/png' });
+
+    return new NextResponse(blob, {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
