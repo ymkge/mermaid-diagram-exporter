@@ -12,22 +12,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Mermaid code is required' }, { status: 400 });
     }
 
-    // --- mmdc を実行してPDFを生成 --- //
     const tempInputPath = path.join('/tmp', `mermaid-input-${Date.now()}.mmd`);
     const tempOutputPath = path.join('/tmp', `mermaid-output-${Date.now()}.pdf`);
     
-    const mmdcPath = path.resolve(process.cwd(), 'node_modules', '.bin', 'mmdc');
+    // mmdcの実体であるJSファイルを直接指定
+    const cliPath = path.resolve(process.cwd(), 'node_modules', '@mermaid-js', 'mermaid-cli', 'dist', 'cli.js');
 
     await fs.writeFile(tempInputPath, code);
 
-    // Vercel環境用のPuppeteer設定
     const puppeteerConfig = {
       executablePath: await chromium.executablePath(),
       args: chromium.args,
       headless: chromium.headless,
     };
 
-    // 日本語フォント対応のための設定
     const mmdcConfig = {
       "fontFamily": "\"游ゴシック体\", \"Yu Gothic\", \"メイリオ\", Meiryo, sans-serif",
       "puppeteerConfigFile": puppeteerConfig
@@ -35,7 +33,8 @@ export async function POST(request: Request) {
     const configPath = path.join('/tmp', `mmdc-config-${Date.now()}.json`);
     await fs.writeFile(configPath, JSON.stringify(mmdcConfig));
 
-    const command = `${mmdcPath} -i ${tempInputPath} -o ${tempOutputPath} -t ${theme || 'default'} -c ${configPath}`;
+    // nodeで直接cli.jsを実行するコマンド
+    const command = `node ${cliPath} -i ${tempInputPath} -o ${tempOutputPath} -t ${theme || 'default'} -c ${configPath}`;
 
     await new Promise<void>((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
@@ -55,7 +54,6 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    // BufferからArrayBufferを安全に抽出し、型アサーションを用いてBlobを作成
     const arrayBuffer = pdfBuffer.buffer.slice(
       pdfBuffer.byteOffset,
       pdfBuffer.byteOffset + pdfBuffer.byteLength

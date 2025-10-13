@@ -3,10 +3,7 @@
     "app/api/generate-**/route.ts": {
       "maxDuration": 30,
       "memory": 1024,
-      "includeFiles": [
-        "node_modules/@mermaid-js/mermaid-cli/**",
-        "node_modules/.bin/mmdc"
-      ]
+      "includeFiles": "node_modules/@mermaid-js/mermaid-cli/**"
     }
   }
 }
