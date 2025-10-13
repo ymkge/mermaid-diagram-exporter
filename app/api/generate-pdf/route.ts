@@ -55,12 +55,12 @@ export async function POST(request: Request) {
     await fs.unlink(tempOutputPath);
     await fs.unlink(configPath);
 
-    // BufferからArrayBufferを安全に抽出してBlobを作成
+    // BufferからArrayBufferを安全に抽出し、型アサーションを用いてBlobを作成
     const arrayBuffer = pdfBuffer.buffer.slice(
       pdfBuffer.byteOffset,
       pdfBuffer.byteOffset + pdfBuffer.byteLength
     );
-    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+    const blob = new Blob([arrayBuffer as ArrayBuffer], { type: 'application/pdf' });
 
     return new NextResponse(blob, {
       status: 200,
