@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
+import chromium from '@sparticuz/chromium';
 
 export async function POST(request: Request) {
   try {
@@ -16,18 +17,21 @@ export async function POST(request: Request) {
     const tempOutputPath = path.join('/tmp', `mermaid-output-${Date.now()}.png`);
     
     // mmdc の実行パス
-    // Vercel環境では `node_modules` のパスが異なる可能性があるため、動的に解決
     const mmdcPath = path.resolve(process.cwd(), 'node_modules', '.bin', 'mmdc');
 
     await fs.writeFile(tempInputPath, code);
 
+    // Vercel環境用のPuppeteer設定
+    const puppeteerConfig = {
+      executablePath: await chromium.executablePath(),
+      args: chromium.args,
+      headless: chromium.headless,
+    };
+
     // 日本語フォント対応のための設定
-    // 元の mmdc-config.json の内容をここにオブジェクトとして定義
     const mmdcConfig = {
-      "fontFamily": "\"游ゴシック体\", \"Yu Gothic\", \"メイリオ\", Meiryo, sans-serif",
-      "puppeteerConfigFile": {
-        "args": ["--no-sandbox"]
-      }
+      "fontFamily": ""游ゴシック体", "Yu Gothic", "メイリオ", Meiryo, sans-serif",
+      "puppeteerConfigFile": puppeteerConfig
     };
     const configPath = path.join('/tmp', `mmdc-config-${Date.now()}.json`);
     await fs.writeFile(configPath, JSON.stringify(mmdcConfig));
