@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import mermaid from 'mermaid';
 import { toast } from 'sonner';
 
+// --- 型定義 --- //
+export type MermaidTheme = "default" | "base" | "dark" | "forest" | "neutral" | "null" | undefined;
+
 // --- 定数定義 --- //
 export const sampleCodes = [
   {
@@ -52,7 +55,7 @@ export const sampleCodes = [
 export const useMermaid = () => {
   const [code, setCode] = useState(sampleCodes[0].code);
   const [svg, setSvg] = useState('');
-  const [mermaidTheme, setMermaidTheme] = useState('default');
+  const [mermaidTheme, setMermaidTheme] = useState<MermaidTheme>('default');
   const [scale, setScale] = useState(2);
   
   const [isRendering, setIsRendering] = useState(false);
