@@ -38,6 +38,37 @@ JOBフロー図などの視覚化されたプロセスを、ドキュメント�
 - **通知**: [Sonner](https://sonner.emilkowal.ski/)
 - **テーマ管理**: [next-themes](https://github.com/pacocoursey/next-themes)
 
+## 処理フロー
+
+このアプリケーションの主要な処理フローは以下の通りです。
+
+```mermaid
+flowchart TD
+    subgraph "フロントエンド (ブラウザ)"
+        A[ユーザーがEditorにMermaid記法を入力] --> B{useMermaidフック};
+        B --> C[クライアントサイドでSVGを生成];
+        C --> D[PreviewにSVGをリアルタイム表示];
+        E[ユーザーがエクスポートボタンをクリック] --> F[APIルートを呼び出す<br>(/api/generate-png or /api/generate-pdf)];
+    end
+
+    subgraph "バックエンド (Next.jsサーバー)"
+        F --> G[APIルートがリクエストを受信];
+        G --> H[リクエストボディからMermaid記法を取得];
+        H --> I[@mermaid-js/mermaid-cli を実行];
+        I --> J[Puppeteerを使って図をレンダリング];
+        J --> K[PNG/PDFファイルを生成];
+    end
+
+    subgraph "フロントエンド (ブラウザ)"
+        K --> L[生成されたファイルをレスポンスとして受信];
+        L --> M[ファイルをダウンロード];
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#f9f,stroke:#333,stroke-width:2px
+    style M fill:#ccf,stroke:#333,stroke-width:2px
+```
+
 ## プロジェクト構造
 
 リファクタリングにより、コードベースは役割ごとに分割されています。
