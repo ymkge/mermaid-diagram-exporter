@@ -54,7 +54,7 @@ flowchart TD
     subgraph "バックエンド (Next.jsサーバー)"
         F --> G[APIルートがリクエストを受信];
         G --> H[リクエストボディからMermaid記法を取得];
-        H --> I[@mermaid-js/mermaid-cli を実行];
+        H --> I["@mermaid-js/mermaid-cli を実行"];
         I --> J[Puppeteerを使って図をレンダリング];
         J --> K[PNG/PDFファイルを生成];
     end
