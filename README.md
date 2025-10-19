@@ -64,9 +64,9 @@ flowchart TD
         L --> M[ファイルをダウンロード];
     end
 
-    style A fill:#f9f,stroke:#420101,stroke-width:2px
-    style E fill:#f9f,stroke:#420101,stroke-width:2px
-    style M fill:#ccf,stroke:#420101,stroke-width:2px
+    style A fill:#590159,stroke:#590159,stroke-width:2px
+    style E fill:#590159,stroke:#590159,stroke-width:2px
+    style M fill:#590159,stroke:#590159,stroke-width:2px
 ```
 
 ## プロジェクト構造
