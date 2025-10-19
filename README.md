@@ -48,7 +48,7 @@ flowchart TD
         A[ユーザーがEditorにMermaid記法を入力] --> B{useMermaidフック};
         B --> C[クライアントサイドでSVGを生成];
         C --> D[PreviewにSVGをリアルタイム表示];
-        E[ユーザーがエクスポートボタンをクリック] --> F[APIルートを呼び出す<br>(/api/generate-png or /api/generate-pdf)];
+        E[ユーザーがエクスポートボタンをクリック] --> F["APIルートを呼び出す<br>/api/generate-png, /api/generate-pdf"];
     end
 
     subgraph "バックエンド (Next.jsサーバー)"
