@@ -69,7 +69,6 @@ export const useMermaid = () => {
         mermaid.initialize({
           startOnLoad: false,
           theme: mermaidTheme,
-          themeVariables: { fontSize: '32px' },
           securityLevel: 'strict',
         });
         const { svg } = await mermaid.render('mermaid-graph-' + Date.now(), code);
