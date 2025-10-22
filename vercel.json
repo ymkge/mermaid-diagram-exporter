@@ -1,12 +1,11 @@
 {
-  "functions": [
-    {
-      "src": "app/api/generate-**/route.ts",
+  "functions": {
+    "app/api/generate-**/route.ts": {
       "maxDuration": 30,
       "includeFiles": [
         "node_modules/@sparticuz/chromium/**",
         "lib/mmdc-bin/**"
       ]
     }
-  ]
+  }
 }
