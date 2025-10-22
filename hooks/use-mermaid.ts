@@ -229,9 +229,14 @@ export const useMermaid = () => {
 
     } catch (e: any) {
       console.error('Copy to clipboard failed:', e);
-      const description = e.name === 'NotAllowedError'
-        ? 'ブラウザの権限設定でクリップボードへのアクセスを許可してください。'
-        : 'このブラウザはクリップボードへのコピーに対応していない可能性があります。';
+      let description = 'このブラウザはクリップボードへのコピーに対応していない可能性があります。';
+      if (e.name === 'NotAllowedError') {
+        if (e.message.includes('focused')) {
+          description = 'コピー操作中は、このウィンドウをアクティブにしてください。';
+        } else {
+          description = 'ブラウザの権限設定でクリップボードへのアクセスを許可してください。';
+        }
+      }
       toast.error('クリップボードへのコピーに失敗しました。', { description });
     } finally {
       setIsGenerating(false);
