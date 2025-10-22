@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import puppeteer, { type Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -21,11 +21,11 @@ export async function POST(request: Request) {
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
-        headless: true,
+        headless: chromium.headless,
       });
     }
 
-    const page: Page = await browser.newPage();
+    const page = await browser.newPage();
 
     await page.setContent(`
       <!DOCTYPE html>
