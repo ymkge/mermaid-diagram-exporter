@@ -178,11 +178,16 @@ export const useMermaid = () => {
     setIsGenerating(true);
     try {
       const blob = await generateBlob('png');
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      // Blobを再構築して、内部的な問題を回避する試み
+      const newBlob = new Blob([await blob.arrayBuffer()], { type: 'image/png' });
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': newBlob })]);
       toast.success('画像をクリップボードにコピーしました！');
     } catch (e: any) {
       console.error('Copy to clipboard failed:', e);
-      toast.error('クリップボードへのコピーに失敗しました。', { description: e.message });
+      const description = e.name === 'NotAllowedError'
+        ? 'ブラウザでクリップボードへのアクセスが許可されていません。サイトの設定を確認してください。'
+        : e.message;
+      toast.error('クリップボードへのコピーに失敗しました。', { description });
     } finally {
       setIsGenerating(false);
     }

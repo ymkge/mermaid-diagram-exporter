@@ -31,8 +31,8 @@ JOBフロー図などの視覚化されたプロセスを、ドキュメント�
 - **フレームワーク**: [Next.js](https://nextjs.org/) (React)
 - **UI**: [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/)
 - **言語**: [TypeScript](https://www.typescriptlang.org/)
-- **ダイアグラムレンダリング**: [Mermaid.js](https://mermaid-js.github.io/mermaid/#/)
-- **PNG/PDF生成**: [@mermaid-js/mermaid-cli](https://github.com/mermaid-js/mermaid-cli)
+- **ダイアグラムレンダリング**: [Mermaid.js](https://mermaid-js.github.io/mermaid/#/) (クライアントサイド), [Puppeteer](https://pptr.dev/) (サーバーサイド)
+- **PNG/PDF生成**: [puppeteer-core](https://pptr.dev/), [@sparticuz/chromium](https://github.com/Sparticuz/chromium)
 - **コードエディタ**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
 - **アイコン**: [Lucide React](https://lucide.dev/)
 - **通知**: [Sonner](https://sonner.emilkowal.ski/)
@@ -48,25 +48,24 @@ flowchart TD
         A[ユーザーがEditorにMermaid記法を入力] --> B{useMermaidフック};
         B --> C[クライアントサイドでSVGを生成];
         C --> D[PreviewにSVGをリアルタイム表示];
-        E[ユーザーがエクスポートボタンをクリック] --> F["APIルートを呼び出す<br>/api/generate-png, /api/generate-pdf"];
+        E[ユーザーがエクスポート/コピーボタンをクリック] --> F["APIルートを呼び出す<br>/api/generate-png, /api/generate-pdf"];
     end
 
-    subgraph "バックエンド (Next.jsサーバー)"
+    subgraph "バックエンド (Next.js API Route)"
         F --> G[APIルートがリクエストを受信];
-        G --> H[リクエストボディからMermaid記法を取得];
-        H --> I["@mermaid-js/mermaid-cli を実行"];
-        I --> J[Puppeteerを使って図をレンダリング];
-        J --> K[PNG/PDFファイルを生成];
+        G --> H[PuppeteerとChromiumで仮想ブラウザを起動];
+        H --> I[仮想ブラウザ上でMermaid.jsを実行し、図を描画];
+        I --> J[ページをスクリーンショット or PDF化];
     end
 
     subgraph "フロントエンド (ブラウザ)"
-        K --> L[生成されたファイルをレスポンスとして受信];
-        L --> M[ファイルをダウンロード];
+        J --> K[生成されたファイル/データをレスポンスとして受信];
+        K --> L[ファイルをダウンロード or クリップボードにコピー];
     end
 
     style A fill:#590159,stroke:#590159,stroke-width:2px
     style E fill:#590159,stroke:#590159,stroke-width:2px
-    style M fill:#590159,stroke:#590159,stroke-width:2px
+    style L fill:#590159,stroke:#590159,stroke-width:2px
 ```
 
 ## プロジェクト構造
@@ -102,19 +101,23 @@ flowchart TD
 
 3.  ブラウザで `http://localhost:3000` を開きます。
 
-## 既知の問題と今後の課題
+## 課題と経緯
 
-### Vercel環境でのPNG/PDF生成エラー
+### 【解決済み】Vercel環境でのPNG/PDF生成エラー
 
-現在、Vercelにデプロイされた環境において、PNG保存、PDF保存、およびクリップボードへのコピー機能がランタイムエラーで失敗します。（SVG保存は正常に動作します。）
+当初、PNG/PDF生成に`@mermaid-js/mermaid-cli`を利用していましたが、このライブラリがVercelのサーバーレス環境で動作しないという問題がありました。
+
+この問題を解決するため、クライアントサイドでの画像生成など複数のアプローチを試みましたが、ブラウザ間の互換性やライブラリの不安定さにより、いずれも完全な解決には至りませんでした。
+
+最終的に、サーバーサイドで動作するライブラリを、Vercel環境と互換性の高い`puppeteer-core`および`@sparticuz/chromium`に切り替えることで、この問題を解決しました。また、ローカル開発環境とVercel本番環境の両方で安定して動作するよう、環境に応じたブラウザ実行環境の切り替えロジックを導入しています。
+
+### 【未解決】クリップボードへのコピー機能の不具合
 
 - **問題**:
-  サーバーレス関数（APIルート）の実行時に、画像生成に必要な `@mermaid-js/mermaid-cli` の実行ファイルが見つからない (`MODULE_NOT_FOUND`) エラーが発生します。
+  現在、一部のブラウザ環境において、「コピー」ボタンを押すと「コピーしました」という成功メッセージが表示されるにも関わらず、実際にはクリップボードに画像が書き込まれない（貼り付けができない）という「サイレントフェイル」現象が確認されています。
 
-- **経緯と試したこと**:
-  この問題を解決するため、以下のアプローチを試みましたが、いずれも成功しませんでした。
-  1.  `package.json` の依存関係を修正し、Vercel環境でPuppeteerが動作するように設定。
-  2.  `vercel.json` の `includeFiles` を使用し、`node_modules` 内の `mmdc` 関連ファイルを含めるよう指定。
-  3.  `mmdc` 関連ファイルを `node_modules` からプロジェクト内の `lib/mmdc-bin` ディレクトリに手動でコピーし、`includeFiles` でそのディレクトリを指定。
+- **原因の推測**:
+  サーバーから返される画像データ自体は正常であることが確認できています。そのため、この問題はアプリケーションのコードに起因するものではなく、ブラウザのセキュリティポリシーや、OSとブラウザ間のクリップボード連携における稀な不具合である可能性が極めて高いと考えられます。
 
-  上記3の段階まで進めても、Vercelの実行環境にファイルが配置されず、エラーが解消されませんでした。ローカル環境では正常に動作するため、Vercelのビルド・バンドルプロセスに起因する問題である可能性が非常に高いです。
+- **代替策**:
+  この問題はアプリケーションコードでの解決が困難なため、代替手段として、一度 **「PNG保存」** ボタンで画像をPCにダウンロードし、そのファイルを直接コピー＆ペーストしていただく方法を推奨します。

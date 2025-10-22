@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import puppeteer from 'puppeteer-core';
+import puppeteer, { type Page } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const page = await browser.newPage();
+    const page: Page = await browser.newPage();
 
     await page.setContent(`
       <!DOCTYPE html>
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       </html>
     `);
 
-    const dimensions = await page.evaluate(() => {
+    const dimensions = await page.evaluate((): { width: number; height: number } | null => {
       const el = document.querySelector('.mermaid svg');
       if (!el) return null;
       const { width, height } = el.getBoundingClientRect();
