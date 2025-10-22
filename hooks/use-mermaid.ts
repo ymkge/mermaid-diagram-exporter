@@ -51,6 +51,17 @@ export const sampleCodes = [
   },
 ];
 
+// --- ヘルパー関数 --- //
+const compareArrayBuffers = (buf1: ArrayBuffer, buf2: ArrayBuffer): boolean => {
+  if (buf1.byteLength !== buf2.byteLength) return false;
+  const view1 = new Uint8Array(buf1);
+  const view2 = new Uint8Array(buf2);
+  for (let i = 0; i < view1.length; i++) {
+    if (view1[i] !== view2[i]) return false;
+  }
+  return true;
+};
+
 // --- カスタムフック --- //
 export const useMermaid = () => {
   const [code, setCode] = useState(sampleCodes[0].code);
@@ -178,15 +189,49 @@ export const useMermaid = () => {
     setIsGenerating(true);
     try {
       const blob = await generateBlob('png');
-      // Blobを再構築して、内部的な問題を回避する試み
-      const newBlob = new Blob([await blob.arrayBuffer()], { type: 'image/png' });
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': newBlob })]);
-      toast.success('画像をクリップボードにコピーしました！');
+      const pngBlob = new Blob([await blob.arrayBuffer()], { type: 'image/png' });
+
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+
+      // --- 検証ロジック ---
+      try {
+        // 読み取り権限がない場合、ここでエラーが発生する可能性がある
+        const clipboardItems = await navigator.clipboard.read();
+        let isVerified = false;
+        for (const item of clipboardItems) {
+          if (item.types.includes('image/png')) {
+            const clipboardBlob = await item.getType('image/png');
+            const sourceBuffer = await pngBlob.arrayBuffer();
+            const clipboardBuffer = await clipboardBlob.arrayBuffer();
+            if (compareArrayBuffers(sourceBuffer, clipboardBuffer)) {
+              isVerified = true;
+              break;
+            }
+          }
+        }
+
+        if (isVerified) {
+          toast.success('画像をクリップボードにコピーしました！');
+        } else {
+          // 書き込んだはずのデータが見つからなかった場合
+          throw new Error('クリップボードの検証に失敗しました。');
+        }
+      } catch (verifyError: any) {
+        console.error('Clipboard verification failed:', verifyError);
+        // 検証に失敗しても、書き込み自体は成功している可能性がある
+        // そのため、ユーザーに状況を伝え、代替策を提示する
+        toast.warning('コピーは実行されましたが、検証に失敗しました。', {
+          description: '貼り付けられない場合は「PNG保存」からダウンロードをお試しください。',
+          duration: 8000,
+        });
+      }
+      // --- 検証ロジックここまで ---
+
     } catch (e: any) {
       console.error('Copy to clipboard failed:', e);
       const description = e.name === 'NotAllowedError'
-        ? 'ブラウザでクリップボードへのアクセスが許可されていません。サイトの設定を確認してください。'
-        : e.message;
+        ? 'ブラウザの権限設定でクリップボードへのアクセスを許可してください。'
+        : 'このブラウザはクリップボードへのコピーに対応していない可能性があります。';
       toast.error('クリップボードへのコピーに失敗しました。', { description });
     } finally {
       setIsGenerating(false);
