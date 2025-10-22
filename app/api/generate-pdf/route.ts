@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     } else {
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: './lib/mmdc-bin/chromium',
+        executablePath: './lib/mmdc-bin/chromium/chromium',
         headless: true,
       });
     }
