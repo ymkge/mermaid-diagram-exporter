@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     } else {
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: await chromium.createPath(),
+        executablePath: await chromium.executablePath(),
         headless: true,
       });
     }
