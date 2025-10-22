@@ -4,5 +4,6 @@
       "maxDuration": 30,
       "includeFiles": "lib/mmdc-bin/**"
     }
-  }
+  },
+  "installCommand": "npm install && mkdir -p lib/mmdc-bin/chromium && cp -R node_modules/@sparticuz/chromium/bin/* lib/mmdc-bin/chromium"
 }
