@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     } else {
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath(),
+        executablePath: '/var/task/node_modules/@sparticuz/chromium/bin',
         headless: true,
       });
     }
