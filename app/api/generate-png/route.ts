@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     await browser.close();
 
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(new Uint8Array(imageBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
