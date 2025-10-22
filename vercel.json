@@ -3,10 +3,7 @@
     "app/api/generate-**/route.ts": {
       "maxDuration": 30,
       
-      "includeFiles": [
-        "node_modules/@sparticuz/chromium/**",
-        "lib/mmdc-bin/**"
-      ]
+      "includeFiles": "lib/mmdc-bin/**"
     }
   }
 }
