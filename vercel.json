@@ -1,6 +1,13 @@
 {
   "functions": {
-    "app/api/generate-**/route.ts": {
+    "app/api/generate-pdf/route.ts": {
+      "maxDuration": 30,
+      "includeFiles": [
+        "node_modules/@sparticuz/chromium/**",
+        "lib/mmdc-bin/**"
+      ]
+    },
+    "app/api/generate-png/route.ts": {
       "maxDuration": 30,
       "includeFiles": [
         "node_modules/@sparticuz/chromium/**",
