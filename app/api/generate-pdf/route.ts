@@ -15,8 +15,10 @@ export async function POST(request: Request) {
     let browser;
 
     if (isDev) {
-      const puppeteerFull = (await import('puppeteer')).default;
-      browser = await puppeteerFull.launch({ headless: true });
+      browser = await puppeteer.launch({
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        headless: true,
+      });
     } else {
       browser = await puppeteer.launch({
         args: chromium.args,
