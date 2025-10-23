@@ -121,3 +121,18 @@ flowchart TD
 
 - **代替策**:
   この問題はアプリケーションコードでの解決が困難なため、代替手段として、一度 **「PNG保存」** ボタンで画像をPCにダウンロードし、そのファイルを直接コピー＆ペーストしていただく方法を推奨します。
+
+### 【未解決】Vercel環境でのPNG/PDF/コピー機能のエラー (Chromiumが見つからない)
+
+- **問題**: Vercelにデプロイ後、SVG以外のエクスポート機能（PNG, PDF, クリップボードコピー）が動作せず、以下のエラーが発生する。
+  `API Error: Error: Browser was not found at the configured executablePath (./lib/mmdc-bin/chromium/chromium)`
+- **経緯**:
+  - Vercelでのビルドエラー（型競合、`headless`オプションの型不一致、`NextResponse`の型不一致）を解消するため、`puppeteer`への依存を`puppeteer-core`に一本化し、`vercel.json`やAPIルートのコードを複数回修正。
+  - ローカル環境での`spawn`エラーを解消するため、ローカルのChrome実行パスを明示的に指定。
+  - Vercelでの`@sparticuz/chromium`のファイルが見つからないエラー（`The input directory "/var/task/node_modules/@sparticuz/chromium/bin" does not exist.`）に対し、`vercel.json`の`installCommand`で`@sparticuz/chromium`のファイルを`lib/mmdc-bin/chromium`にコピーし、APIルートの`executablePath`を`./lib/mmdc-bin/chromium/chromium`に設定。
+  - しかし、`executablePath`をコピー先のパスに設定しても、Vercelのランタイム環境でChromiumの実行可能ファイルが見つからない状況が続いている。
+- **現状**: `installCommand`でファイルをコピーし、そのパスを`executablePath`に指定しているにも関わらず、Vercelのランタイム環境でChromiumの実行可能ファイルが見つからない状況が続いている。
+- **Next Step**:
+  1.  Vercelのビルドログを詳細に確認し、`installCommand`がエラーなく実行され、ファイルが期待通りにコピーされているかを検証する。特に、`cp -R`コマンドがVercelの環境で期待通りに動作しているか、コピー先のパスが正しいかを確認する。
+  2.  APIルートの`executablePath`を、ハードコードされたパスではなく、`await chromium.executablePath()`に戻す。`@sparticuz/chromium`が`installCommand`でコピーされたファイル群の中から正しいパスを解決できるかを確認する。
+  3.  もし上記で解決しない場合、`installCommand`でのコピー先を`node_modules/@sparticuz/chromium/bin`に直接変更し、`executablePath`は`await chromium.executablePath()`を使用する。ただし、`node_modules`内へのコピーは`npm audit fix`などで上書きされるリスクがあるため、注意が必要。
