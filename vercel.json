@@ -2,8 +2,11 @@
   "functions": {
     "app/api/generate-**/route.ts": {
       "maxDuration": 30,
-      "includeFiles": "lib/mmdc-bin/**"
+      "includeFiles": [
+        "lib/mmdc-bin/**",
+        "node_modules/@sparticuz/chromium/bin/**"
+      ]
     }
   },
-  "installCommand": "npm install && mkdir -p lib/mmdc-bin/chromium && cp -R node_modules/@sparticuz/chromium/bin/* lib/mmdc-bin/chromium"
+  "installCommand": "npm install"
 }
