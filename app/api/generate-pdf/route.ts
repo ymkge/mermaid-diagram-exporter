@@ -20,6 +20,7 @@ export async function POST(request: Request) {
         headless: true,
       });
     } else {
+      console.log('Chromium executablePath:', await chromium.executablePath());
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
