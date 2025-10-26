@@ -76,7 +76,6 @@ export const useMermaid = () => {
           startOnLoad: false,
           theme: mermaidTheme,
           securityLevel: 'strict',
-          fontFamily: 'Trebuchet MS',
           htmlLabels: false,
           themeVariables: { primaryTextColor: '#000000' },
         });

@@ -10,7 +10,7 @@
  */
 
 import { jsPDF } from 'jspdf';
-import { toPng, Options } from 'html-to-image';
+import { toPng } from 'html-to-image';
 
 // --- プライベートヘルパー関数 ---
 
@@ -18,7 +18,7 @@ import { toPng, Options } from 'html-to-image';
  * エクスポート用の共通オプションを取得する
  * @param scale 解像度スケール
  */
-const getExportOptions = (scale: number): Options => ({
+const getExportOptions = (scale: number) => ({
   pixelRatio: scale,
   backgroundColor: 'white',
   // フォントの埋め込み処理をスキップし、クロスオリジンエラーを回避する

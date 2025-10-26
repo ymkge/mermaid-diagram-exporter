@@ -32,7 +32,7 @@ JOBフロー図などの視覚化されたプロセスを、ドキュメント�
 - **UI**: [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/)
 - **言語**: [TypeScript](https://www.typescriptlang.org/)
 - **ダイアグラムレンダリング**: [Mermaid.js](https://mermaid-js.github.io/mermaid/#/)
-- **PNG/PDF生成 (クライアントサイド)**: [canvg](https://github.com/canvg/canvg), [jsPDF](https://github.com/parallax/jsPDF)
+- **PNG/PDF生成 (クライアントサイド)**: [html-to-image](https://github.com/bubkoo/html-to-image), [jsPDF](https://github.com/parallax/jsPDF)
 - **コードエディタ**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
 - **アイコン**: [Lucide React](https://lucide.dev/)
 - **通知**: [Sonner](https://sonner.emilkowal.ski/)
@@ -40,28 +40,25 @@ JOBフロー図などの視覚化されたプロセスを、ドキュメント�
 
 ## 処理フロー
 
-アーキテクチャの変更により、すべての画像生成処理がブラウザ（クライアントサイド）で完結するようになりました。サーバーサイドへのAPI呼び出しは不要です。
+現在のアーキテクチャでは、すべての画像生成処理がブラウザ（クライアントサイド）で完結します。ユーザーが見ているプレビュー領域を直接画像化することで、安定した出力を実現しています。
 
 ```mermaid
 flowchart TD
     subgraph "フロントエンド (ブラウザ)"
         A[ユーザーがEditorにMermaid記法を入力] --> B{useMermaidフック};
         B --> C[クライアントサイドでSVGを生成];
-        C --> D[PreviewにSVGをリアルタイム表示];
+        C --> D["PreviewCardにSVGをリアルタイム表示<br>(id='mermaid-preview-area')"];
         
-        E[ユーザーがエクスポート/コピーボタンをクリック] --> F{exporter.ts モジュール};
-        F --> G[canvgライブラリでSVGをCanvasに描画];
-        G --> H{PNG/PDF形式を選択};
-        H -->|PNG| I[CanvasからPNG Blobを生成];
-        H -->|PDF| J[CanvasからPNGを生成し、jsPDFでPDFに埋め込み];
-        
-        I --> K[ファイルをダウンロード or クリップボードにコピー];
-        J --> K[ファイルをダウンロード or クリップボードにコピー];
+        E[ユーザーがエクスポート/コピーボタンをクリック] --> F{useMermaidフック};
+        F -- "id='mermaid-preview-area' を渡す" --> G{exporter.ts モジュール};
+        G --> H["html-to-imageライブラリで<br>プレビュー要素を直接画像化"];
+        H --> I{PNG/PDF形式を選択};
+        I --> J[ファイルをダウンロード or クリップボードにコピー];
     end
 
     style A fill:#590159,stroke:#590159,stroke-width:2px
     style E fill:#590159,stroke:#590159,stroke-width:2px
-    style K fill:#590159,stroke:#590159,stroke-width:2px
+    style J fill:#590159,stroke:#590159,stroke-width:2px
 ```
 
 ## プロジェクト構造
@@ -104,14 +101,18 @@ flowchart TD
 ### 【解決済み】Vercel環境でのサーバーサイド実行エラー
 
 - **問題**: 当初、PNG/PDF生成をサーバーサイド(Next.js API Route)でPuppeteerを用いて行っていましたが、Vercelのサーバーレス環境ではChromiumの実行パスの問題が解決できず、デプロイ環境でエクスポート機能が一切動作しないという致命的な問題を抱えていました。
-- **解決策**: この問題を根本的に解決するため、**アーキテクチャを「完全クライアント生成型」に全面的に刷新**しました。サーバーサイドでの処理をすべて撤廃し、`canvg`と`jsPDF`ライブラリを用いて、ブラウザ上ですべての画像・PDF生成を完結させるように変更しました。これにより、Vercelの実行環境への依存がなくなり、アプリケーションは静的サイトとして安定して動作するようになりました。
+- **解決策**: この問題を根本的に解決するため、アーキテクチャを「完全クライアント生成型」に全面的に刷新しました。サーバーサイドでの処理をすべて撤廃し、ブラウザ上ですべての画像・PDF生成を完結させるように変更しました。これにより、Vercelの実行環境への依存がなくなり、アプリケーションは静的サイトとして安定して動作するようになりました。
 
-### 【未解決】エクスポートした画像・PDFで文字が消える問題
+### 【解決済み】エクスポート機能の安定化
 
-- **問題**: 「完全クライアント生成型」への移行後、PNG, PDF, クリップボードへのコピー機能でエクスポートされた画像において、図形の枠線は表示されるものの、中の文字がすべて消えてしまう現象が発生しています。
-- **原因の推測**: SVGをCanvasに変換するライブラリ(`canvg`)が、Mermaid.jsの生成するSVG内のフォント指定を正しく解釈・描画できていない可能性が高いです。Canvasへの描画コンテキストにおいて、フォントファミリーが見つからない、または読み込めていない状態になっていると推測されます。
+- **現象**: クライアント生成への移行後、エクスポートした画像で文字が消えたり、画像生成自体に失敗する問題が断続的に発生していました。
 
-- **Next Action (次のデバッグ方針)**:
-  1.  **`canvg`のフォント読み込み機能の調査**: `canvg`には外部フォントを扱うためのオプションが存在する可能性があります。ドキュメントを再調査し、Mermaid.jsが使用するフォント（`"trebuchet ms", verdana, arial, sans-serif`など）を`canvg`のレンダリング時に明示的に指定、または読み込ませる方法を試みます。
-  2.  **SVGスタイルのインライン化**: Mermaid.jsが`<style>`タグで定義しているCSSを、各SVG要素の`style`属性に直接展開（インライン化）することで、`canvg`がスタイルを認識しやすくなるか検証します。これを実現するためのライブラリ（例: `inline-style`）の利用も検討します。
-  3.  **代替ライブラリの検討**: `canvg`での解決が困難な場合、`dom-to-image-more`や`html-to-image`など、Webフォントの扱いに優れている他のHTML/SVG変換ライブラリを導入し、同様の処理が可能か技術検証を行います。
+- **原因**: 複数の要因が複合的に絡み合っていました。
+    1.  **ライブラリとCORSの問題**: 画像生成ライブラリ(`canvg`, `save-svg-as-png`, `html-to-image`)が、ページに読み込まれている外部CSS（Google Fonts, Monaco Editor）を処理しようとして、ブラウザのセキュリティ制限（CORS）に抵触していました。
+    2.  **SVGの互換性**: MermaidがデフォルトでHTMLラベル（`<foreignObject>`）を使用しており、これが多くの画像生成ライブラリで正しく解釈されませんでした。
+    3.  **不安定なアーキテクチャ**: エクスポートの都度、非表示のDOM要素を裏で生成する方式だったため、タイミングによってレンダリングが不完全になる問題がありました。
+
+- **対策**: 以下の抜本的な修正を行いました。
+    1.  **MermaidのSVG生成を改善**: Mermaidの初期化時に`htmlLabels: false`を指定し、互換性の高い標準的なSVGテキスト (`<text>`) を生成するように変更しました。
+    2.  **画像生成ライブラリの最適化**: ライブラリを`html-to-image`に統一し、フォント処理をスキップするオプション (`skipFonts: true`) を指定。これにより、CORSエラーを根本的に回避しました。
+    3.  **アーキテクチャの刷新**: 裏で要素を生成する方式を廃止し、**画面に表示されているプレビュー領域そのもの**を直接画像化する方式に変更しました。これにより、ユーザーが見ている通りの内容が確実にエクスポートされるようになり、安定性が大幅に向上しました。

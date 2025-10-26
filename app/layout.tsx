@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
+import { Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+
+const notoSans = Noto_Sans({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: '--font-noto-sans',
+});
 
 export const metadata: Metadata = {
   title: "Mermaid Diagram Exporter",
@@ -16,13 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Trebuchet+MS&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className={GeistSans.className}>
+      <body className={`${GeistSans.className} ${notoSans.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
