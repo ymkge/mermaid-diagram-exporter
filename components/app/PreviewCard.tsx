@@ -15,6 +15,7 @@ export const PreviewCard = ({ svg, isRendering }: PreviewCardProps) => {
         <CardTitle>Preview</CardTitle>
       </CardHeader>
       <CardContent
+        id="mermaid-preview-area" // エクスポート機能がこのIDを参照する
         className="flex items-start justify-start h-[60vh] overflow-auto"
         // HACK: ダークモード時にTailwindの`bg-white`クラスが正しく適用されない問題への対策。
         // select.tsxの事例と同様に、ビルドプロセスでクラスがパージされる問題の可能性が高い。

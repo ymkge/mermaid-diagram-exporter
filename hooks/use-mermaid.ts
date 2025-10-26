@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import mermaid from 'mermaid';
 import { toast } from 'sonner';
 import {
-  exportToSvg,
   exportToPng,
   exportToPdf,
   copyToClipboard,
@@ -14,6 +13,7 @@ import {
 export type MermaidTheme = "default" | "base" | "dark" | "forest" | "neutral" | "null" | undefined;
 
 // --- 定数定義 --- //
+const PREVIEW_ELEMENT_ID = 'mermaid-preview-area';
 export const sampleCodes = [
   {
     label: 'フローチャート',
@@ -76,9 +76,13 @@ export const useMermaid = () => {
           startOnLoad: false,
           theme: mermaidTheme,
           securityLevel: 'strict',
+          fontFamily: 'Trebuchet MS',
+          htmlLabels: false,
+          themeVariables: { primaryTextColor: '#000000' },
         });
-        const { svg } = await mermaid.render('mermaid-graph-' + Date.now(), code);
-        setSvg(svg);
+        let { svg: svgCode } = await mermaid.render('mermaid-graph-' + Date.now(), code);
+
+        setSvg(svgCode);
       } catch (e: any) {
         toast.error('Mermaidの描画に失敗しました。', { description: e.message });
         setSvg('');
@@ -104,7 +108,16 @@ export const useMermaid = () => {
   // SVG保存処理
   const handleSaveSVG = () => {
     try {
-      exportToSvg(svg);
+      if (!svg) throw new Error('SVGデータがありません。');
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'diagram.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       toast.success('SVGファイルを保存しました。');
     } catch (e: any) {
       toast.error('SVGの保存に失敗しました。', { description: e.message });
@@ -115,7 +128,7 @@ export const useMermaid = () => {
   const handleSavePNG = async () => {
     setIsGenerating(true);
     try {
-      await exportToPng(svg, scale);
+      await exportToPng(PREVIEW_ELEMENT_ID, scale);
       toast.success('PNGファイルを保存しました。');
     } catch (e: any) {
       toast.error('PNGの保存に失敗しました。', { description: e.message });
@@ -128,7 +141,7 @@ export const useMermaid = () => {
   const handleSavePDF = async () => {
     setIsGenerating(true);
     try {
-      await exportToPdf(svg, scale);
+      await exportToPdf(PREVIEW_ELEMENT_ID, scale);
       toast.success('PDFファイルを保存しました。');
     } catch (e: any) {
       toast.error('PDFの保存に失敗しました。', { description: e.message });
@@ -141,7 +154,7 @@ export const useMermaid = () => {
   const handleCopyToClipboard = async () => {
     setIsGenerating(true);
     try {
-      await copyToClipboard(svg, scale);
+      await copyToClipboard(PREVIEW_ELEMENT_ID, scale);
       toast.success('画像をクリップボードにコピーしました！');
     } catch (e: any) {
       let description = e.message;
