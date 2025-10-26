@@ -10,7 +10,7 @@
  */
 
 import { jsPDF } from 'jspdf';
-import { toPng } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 
 // --- プライベートヘルパー関数 ---
 
@@ -26,17 +26,24 @@ const getExportOptions = (scale: number) => ({
 });
 
 /**
- * Data URIをファイルとしてダウンロードする
- * @param dataUri ダウンロードするData URI
+ * Data URIまたはBlobをファイルとしてダウンロードする
+ * @param data ダウンロードするData URIまたはBlob
  * @param filename 保存するファイル名
  */
-const downloadDataUri = (dataUri: string, filename: string) => {
+const downloadFile = (data: string | Blob, filename: string) => {
   const a = document.createElement('a');
-  a.href = dataUri;
+  if (typeof data === 'string') {
+    a.href = data;
+  } else {
+    a.href = URL.createObjectURL(data);
+  }
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  if (typeof data !== 'string') {
+    URL.revokeObjectURL(a.href);
+  }
 };
 
 /**
@@ -52,13 +59,25 @@ const elementToPngBlob = async (elementId: string, scale: number): Promise<Blob>
   }
 
   const options = getExportOptions(scale);
-  const dataUrl = await toPng(element, options);
-  const res = await fetch(dataUrl);
-  return await res.blob();
+  const blob = await toBlob(element, options);
+  if (!blob) {
+    throw new Error('画像のBlob生成に失敗しました。');
+  }
+  return blob;
 };
 
 
 // --- パブリックAPI ---
+
+/**
+ * SVG文字列をSVGファイルとしてダウンロードする (この関数はexporter.tsから独立させるべきだが、一旦ここに残す)
+ * @param svg SVG文字列
+ */
+export const exportSvg = (svg: string): void => {
+  if (!svg) throw new Error('SVGデータがありません。');
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  downloadFile(blob, 'diagram.svg');
+};
 
 /**
  * DOM要素をPNGファイルとしてダウンロードする
@@ -66,14 +85,8 @@ const elementToPngBlob = async (elementId: string, scale: number): Promise<Blob>
  * @param scale 解像度スケール
  */
 export const exportToPng = async (elementId: string, scale: number): Promise<void> => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error(`要素(ID: ${elementId})が見つかりません。`);
-  }
-
-  const options = getExportOptions(scale);
-  const dataUrl = await toPng(element, options);
-  downloadDataUri(dataUrl, 'diagram.png');
+  const blob = await elementToPngBlob(elementId, scale);
+  downloadFile(blob, 'diagram.png');
 };
 
 /**
@@ -92,28 +105,28 @@ export const copyToClipboard = async (elementId: string, scale: number): Promise
  * @param scale 解像度スケール
  */
 export const exportToPdf = async (elementId: string, scale: number): Promise<void> => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error(`要素(ID: ${elementId})が見つかりません。`);
+  const blob = await elementToPngBlob(elementId, scale);
+  const pngDataUrl = URL.createObjectURL(blob);
+
+  try {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = (err) => reject(new Error(`PNG画像の読み込みに失敗しました: ${err}`));
+      image.src = pngDataUrl;
+    });
+
+    const { width, height } = image;
+    const pdf = new jsPDF({
+      orientation: width > height ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [width, height],
+    });
+
+    pdf.addImage(image, 'PNG', 0, 0, width, height);
+    pdf.save('diagram.pdf');
+  } finally {
+    // メモリリークを防ぐために、生成したURLを解放する
+    URL.revokeObjectURL(pngDataUrl);
   }
-
-  const options = getExportOptions(scale);
-  const pngDataUrl = await toPng(element, options);
-
-  const image = new Image();
-  await new Promise<void>((resolve, reject) => {
-    image.onload = () => resolve();
-    image.onerror = (err) => reject(new Error(`PNG画像の読み込みに失敗しました: ${err}`));
-    image.src = pngDataUrl;
-  });
-
-  const { width, height } = image;
-  const pdf = new jsPDF({
-    orientation: width > height ? 'landscape' : 'portrait',
-    unit: 'px',
-    format: [width, height],
-  });
-
-  pdf.addImage(image, 'PNG', 0, 0, width, height);
-  pdf.save('diagram.pdf');
 };
