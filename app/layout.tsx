@@ -16,6 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Trebuchet+MS&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className={GeistSans.className}>
         <ThemeProvider
           attribute="class"

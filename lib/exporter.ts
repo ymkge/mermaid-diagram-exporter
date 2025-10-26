@@ -62,6 +62,7 @@ const svgToPngBlob = async (svg: string, scale: number): Promise<Blob> => {
   context.scale(scale, scale);
 
   // canvgで描画
+  await document.fonts.ready; // フォントの読み込みを待機
   const v = await Canvg.from(context, svg, presets.browser);
   await v.render();
 
