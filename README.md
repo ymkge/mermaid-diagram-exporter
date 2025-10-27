@@ -37,6 +37,7 @@ JOBフロー図などの視覚化されたプロセスを、ドキュメント�
 - **アイコン**: [Lucide React](https://lucide.dev/)
 - **通知**: [Sonner](https://sonner.emilkowal.ski/)
 - **テーマ管理**: [next-themes](https://github.com/pacocoursey/next-themes)
+- **分析**: [Vercel Analytics](https://vercel.com/analytics)
 
 ## 処理フロー
 
@@ -136,3 +137,7 @@ flowchart TD
     1.  **MermaidのSVG生成を改善**: Mermaidの初期化時に`htmlLabels: false`を指定し、互換性の高い標準的なSVGテキスト (`<text>`) を生成するように変更しました。
     2.  **画像生成ライブラリの最適化**: ライブラリを`html-to-image`に統一し、フォント処理をスキップするオプション (`skipFonts: true`) を指定。これにより、CORSエラーを根本的に回避しました。
     3.  **アーキテクチャの刷新**: 裏で要素を生成する方式を廃止し、**画面に表示されているプレビュー領域そのもの**を直接画像化する方式に変更しました。これにより、ユーザーが見ている通りの内容が確実にエクスポートされるようになり、安定性が大幅に向上しました。
+
+## 変更履歴
+
+- **2025-10-27**: Vercel Analyticsを導入し、サイト分析機能を有効化。
