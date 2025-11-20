@@ -10,14 +10,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { sampleCodes, type MermaidTheme } from "@/hooks/use-mermaid";
-import { FileImage, FileText, Copy, Download, Loader2 } from "lucide-react";
+import {
+  FileImage,
+  FileText,
+  Copy,
+  Download,
+  Loader2,
+  ZoomIn,
+  ZoomOut,
+  Expand,
+} from "lucide-react";
+import { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import { MutableRefObject } from "react";
 
-const themeOptions: Exclude<MermaidTheme, undefined | null>[] = ['default', 'dark', 'forest', 'neutral'];
+const themeOptions: Exclude<MermaidTheme, undefined | null>[] = [
+  "default",
+  "dark",
+  "forest",
+  "neutral",
+];
 const scaleOptions = [
-  { value: 1, label: 'x1' },
-  { value: 2, label: 'x2 (高)' },
-  { value: 3, label: 'x3 (超高)' },
-  { value: 4, label: 'x4 (最大)' },
+  { value: 1, label: "x1" },
+  { value: 2, label: "x2 (高)" },
+  { value: 3, label: "x3 (超高)" },
+  { value: 4, label: "x4 (最大)" },
 ];
 
 interface ControlPanelProps {
@@ -31,9 +47,11 @@ interface ControlPanelProps {
   handleSavePDF: () => void;
   handleCopyToClipboard: () => void;
   handleSavePNG: () => void;
+  zoomPanPinchRef: MutableRefObject<ReactZoomPanPinchRef | null>;
 }
 
 export const ControlPanel = ({ ...props }: ControlPanelProps) => {
+  const { zoomPanPinchRef } = props;
   return (
     <Card className="mb-6">
       <CardContent className="p-4 flex flex-wrap items-center gap-4">
@@ -94,21 +112,68 @@ export const ControlPanel = ({ ...props }: ControlPanelProps) => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-grow" />
+
+        <div className="flex items-center gap-2 ml-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => zoomPanPinchRef.current?.zoomIn()}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => zoomPanPinchRef.current?.zoomOut()}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => zoomPanPinchRef.current?.resetTransform()}
+          >
+            <Expand className="h-4 w-4" />
+          </Button>
+        </div>
+
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" onClick={props.handleSaveSVG} disabled={props.isGenerating}>
+          <Button
+            variant="outline"
+            onClick={props.handleSaveSVG}
+            disabled={props.isGenerating}
+          >
             <FileText className="mr-2 h-4 w-4" /> SVG
           </Button>
-          <Button variant="outline" onClick={props.handleSavePDF} disabled={props.isGenerating}>
-            {props.isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          <Button
+            variant="outline"
+            onClick={props.handleSavePDF}
+            disabled={props.isGenerating}
+          >
+            {props.isGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
             PDF
           </Button>
-          <Button onClick={props.handleCopyToClipboard} disabled={props.isGenerating}>
-            {props.isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}
+          <Button
+            onClick={props.handleCopyToClipboard}
+            disabled={props.isGenerating}
+          >
+            {props.isGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
             コピー
           </Button>
           <Button onClick={props.handleSavePNG} disabled={props.isGenerating}>
-            {props.isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileImage className="mr-2 h-4 w-4" />}
+            {props.isGenerating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileImage className="mr-2 h-4 w-4" />
+            )}
             PNG
           </Button>
         </div>

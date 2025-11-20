@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 import { toast } from 'sonner';
 import {
@@ -8,6 +8,7 @@ import {
   exportToPdf,
   copyToClipboard,
 } from '@/lib/exporter';
+import { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 
 // --- 型定義 --- //
 export type MermaidTheme = "default" | "base" | "dark" | "forest" | "neutral" | "null" | undefined;
@@ -66,6 +67,7 @@ export const useMermaid = () => {
   
   const [isRendering, setIsRendering] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const zoomPanPinchRef = useRef<ReactZoomPanPinchRef | null>(null);
 
   // Mermaid レンダリング処理 (クライアントサイド)
   useEffect(() => {
@@ -104,6 +106,32 @@ export const useMermaid = () => {
 
   // --- ファイル生成・操作関連 --- //
 
+  const createExportHandler = (
+    exportFunction: (id: string, scale: number) => Promise<void>,
+    successMessage: string,
+    errorMessagePrefix: string
+  ) => async () => {
+    if (zoomPanPinchRef.current) {
+      zoomPanPinchRef.current.resetTransform();
+      // resetTransformがUIに反映されるのを待つ
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    setIsGenerating(true);
+    try {
+      await exportFunction(PREVIEW_ELEMENT_ID, scale);
+      toast.success(successMessage);
+    } catch (e: any) {
+      let description = e.message;
+      if (errorMessagePrefix === 'クリップボードへのコピー' && e.name === 'NotAllowedError') {
+        description = 'ブラウザの権限設定でクリップボードへのアクセスを許可してください。';
+      }
+      toast.error(`${errorMessagePrefix}に失敗しました。`, { description });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // SVG保存処理
   const handleSaveSVG = () => {
     try {
@@ -124,47 +152,13 @@ export const useMermaid = () => {
   };
 
   // PNG保存処理
-  const handleSavePNG = async () => {
-    setIsGenerating(true);
-    try {
-      await exportToPng(PREVIEW_ELEMENT_ID, scale);
-      toast.success('PNGファイルを保存しました。');
-    } catch (e: any) {
-      toast.error('PNGの保存に失敗しました。', { description: e.message });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const handleSavePNG = createExportHandler(exportToPng, 'PNGファイルを保存しました。', 'PNGの保存');
 
   // PDF保存処理
-  const handleSavePDF = async () => {
-    setIsGenerating(true);
-    try {
-      await exportToPdf(PREVIEW_ELEMENT_ID, scale);
-      toast.success('PDFファイルを保存しました。');
-    } catch (e: any) {
-      toast.error('PDFの保存に失敗しました。', { description: e.message });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const handleSavePDF = createExportHandler(exportToPdf, 'PDFファイルを保存しました。', 'PDFの保存');
 
   // クリップボードへのコピー処理
-  const handleCopyToClipboard = async () => {
-    setIsGenerating(true);
-    try {
-      await copyToClipboard(PREVIEW_ELEMENT_ID, scale);
-      toast.success('画像をクリップボードにコピーしました！');
-    } catch (e: any) {
-      let description = e.message;
-      if (e.name === 'NotAllowedError') {
-        description = 'ブラウザの権限設定でクリップボードへのアクセスを許可してください。';
-      }
-      toast.error('クリップボードへのコピーに失敗しました。', { description });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const handleCopyToClipboard = createExportHandler(copyToClipboard, '画像をクリップボードにコピーしました！', 'クリップボードへのコピー');
 
   return {
     code, setCode,
@@ -177,5 +171,6 @@ export const useMermaid = () => {
     handleSavePNG,
     handleSavePDF,
     handleCopyToClipboard,
+    zoomPanPinchRef,
   };
 };

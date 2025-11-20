@@ -15,7 +15,11 @@ export default function HomePage() {
       <ControlPanel {...mermaidProps} />
       <main className="grid grid-cols-2 gap-6">
         <EditorCard code={mermaidProps.code} setCode={mermaidProps.setCode} />
-        <PreviewCard svg={mermaidProps.svg} isRendering={mermaidProps.isRendering} />
+        <PreviewCard
+          svg={mermaidProps.svg}
+          isRendering={mermaidProps.isRendering}
+          zoomPanPinchRef={mermaidProps.zoomPanPinchRef}
+        />
       </main>
     </div>
   );
