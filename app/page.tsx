@@ -5,6 +5,7 @@ import { Header } from "@/components/app/Header";
 import { ControlPanel } from "@/components/app/ControlPanel";
 import { EditorCard } from "@/components/app/EditorCard";
 import { PreviewCard } from "@/components/app/PreviewCard";
+import { TriangleAlert } from "lucide-react";
 
 export default function HomePage() {
   const mermaidProps = useMermaid();
@@ -21,6 +22,17 @@ export default function HomePage() {
           zoomPanPinchRef={mermaidProps.zoomPanPinchRef}
         />
       </main>
+      {mermaidProps.errorMessage && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-destructive flex items-center">
+            <TriangleAlert className="h-5 w-5 mr-2" />
+            Mermaid エラー
+          </h3>
+          <pre className="mt-2 p-4 bg-muted rounded-md text-destructive-foreground overflow-x-auto text-sm">
+            <code>{mermaidProps.errorMessage}</code>
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

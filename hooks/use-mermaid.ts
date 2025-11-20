@@ -64,6 +64,7 @@ export const useMermaid = () => {
   const [svg, setSvg] = useState('');
   const [mermaidTheme, setMermaidTheme] = useState<MermaidTheme>('default');
   const [scale, setScale] = useState(2);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const [isRendering, setIsRendering] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,6 +74,7 @@ export const useMermaid = () => {
   useEffect(() => {
     const renderMermaid = async () => {
       setIsRendering(true);
+      setErrorMessage(null); // エラーをリセット
       try {
         mermaid.initialize({
           startOnLoad: false,
@@ -85,8 +87,9 @@ export const useMermaid = () => {
 
         setSvg(svgCode);
       } catch (e: any) {
-        toast.error('Mermaidの描画に失敗しました。', { description: e.message });
+        setErrorMessage(e.message);
         setSvg('');
+        toast.error('Mermaidの描画に失敗しました。');
       } finally {
         setIsRendering(false);
       }
@@ -97,6 +100,7 @@ export const useMermaid = () => {
         renderMermaid();
       } else {
         setSvg('');
+        setErrorMessage(null);
         toast.info('コードが入力されていません。');
       }
     }, 500);
@@ -167,6 +171,7 @@ export const useMermaid = () => {
     scale, setScale,
     isRendering,
     isGenerating,
+    errorMessage,
     handleSaveSVG,
     handleSavePNG,
     handleSavePDF,
