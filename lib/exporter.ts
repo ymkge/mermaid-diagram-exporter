@@ -20,7 +20,7 @@ import { toBlob } from 'html-to-image';
  */
 const getExportOptions = (scale: number) => ({
   pixelRatio: scale,
-  backgroundColor: 'white',
+  backgroundColor: '#f0f0f0', // プレビューの背景色と合わせる
   // フォントの埋め込み処理をスキップし、クロスオリジンエラーを回避する
   skipFonts: true,
 });
@@ -53,13 +53,24 @@ const downloadFile = (data: string | Blob, filename: string) => {
  * @returns PNGのBlob
  */
 const elementToPngBlob = async (elementId: string, scale: number): Promise<Blob> => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error(`要素(ID: ${elementId})が見つかりません。`);
+  const parentElement = document.getElementById(elementId);
+  if (!parentElement) {
+    throw new Error(`親要素(ID: ${elementId})が見つかりません。`);
   }
 
-  const options = getExportOptions(scale);
-  const blob = await toBlob(element, options);
+  // 実際のコンテンツ要素を取得 (react-zoom-pan-pinchでラップされた内部の要素)
+  const targetElement = parentElement.querySelector<HTMLElement>(':scope > div > div > div');
+  if (!targetElement) {
+    throw new Error('画像化対象のコンテンツ要素が見つかりません。');
+  }
+
+  const options = {
+    ...getExportOptions(scale),
+    width: targetElement.scrollWidth,
+    height: targetElement.scrollHeight,
+  };
+
+  const blob = await toBlob(targetElement, options);
   if (!blob) {
     throw new Error('画像のBlob生成に失敗しました。');
   }
