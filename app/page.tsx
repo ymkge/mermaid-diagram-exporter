@@ -6,6 +6,7 @@ import { ControlPanel } from "@/components/app/ControlPanel";
 import { EditorCard } from "@/components/app/EditorCard";
 import { PreviewCard } from "@/components/app/PreviewCard";
 import { TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function HomePage() {
   const mermaidProps = useMermaid();
@@ -23,15 +24,15 @@ export default function HomePage() {
         />
       </main>
       {mermaidProps.errorMessage && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-destructive flex items-center">
-            <TriangleAlert className="h-5 w-5 mr-2" />
-            Mermaid エラー
-          </h3>
-          <pre className="mt-2 p-4 bg-muted rounded-md text-destructive-foreground overflow-x-auto text-sm">
-            <code>{mermaidProps.errorMessage}</code>
-          </pre>
-        </div>
+        <Alert variant="destructive" className="mt-6">
+          <TriangleAlert className="h-4 w-4" />
+          <AlertTitle>Mermaid エラー</AlertTitle>
+          <AlertDescription asChild>
+            <pre className="mt-2 rounded-md text-destructive-foreground overflow-x-auto text-sm">
+              <code>{mermaidProps.errorMessage}</code>
+            </pre>
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );
